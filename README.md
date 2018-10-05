@@ -7,3 +7,5 @@ the 2 interesting notebooks:
 [Trajectory_fitting.ipynb](https://github.com/ZackAkil/optimising-basketball/blob/master/Trajectory_fitting.ipynb) - where I use Tensorflow to fit a trajectory function to the data points extracted.
 
 ![shot.git](shot.gif)
+
+![fitting.gif](fitting.gif)
