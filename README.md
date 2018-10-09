@@ -9,3 +9,6 @@ the 2 interesting notebooks:
 ![shot.git](shot.gif)
 
 ![fitting.gif](fitting.gif)
+
+
+http://www.inpredictable.com/2016/03/free-throw-deep-dives-launch-angle.html?m=1
