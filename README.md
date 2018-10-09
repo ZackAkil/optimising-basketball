@@ -1,5 +1,7 @@
 # optimising-basketball
 
+https://medium.com/p/a30a923332de/
+
 the 2 interesting notebooks:
 
 [Frame_trails.ipynb](https://github.com/ZackAkil/optimising-basketball/blob/master/Frame_trails.ipynb) - where I extract data points from a video file.
