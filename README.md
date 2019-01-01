@@ -16,3 +16,6 @@ the 3 interesting notebooks:
 
 
 http://www.inpredictable.com/2016/03/free-throw-deep-dives-launch-angle.html?m=1
+
+
+https://github.com/samdutton/simpl/blob/gh-pages/getusermedia/sources/js/main.js
