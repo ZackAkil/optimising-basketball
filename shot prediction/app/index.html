@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta content="stuff, to, help, search, engines, not" name="keywords">
+<meta content="What this page is about." name="description">
+<meta content="Display Webcam Stream" name="title">
+<title>Display Webcam Stream</title>
+  
+<style>
+#container {
+    margin: 0px auto;
+    width: 500px;
+    height: 375px;
+    border: 10px #333 solid;
+}
+#videoElement {
+    width: 250px;
+    height: 175px;
+    background-color: #666;
+}
+
+#canvas {
+    width: 250px;
+    height: 175px;
+    background-color: #666;
+}
+</style>
+</head>
+  
+<body>
+<div id="container">
+    <video autoplay="true" id="videoElement" hidden></video>
+
+    <canvas height=100px width=100px id="canvas">
+</div>
+<script>
+ var video = document.querySelector("#videoElement");
+ var canvas = document.querySelector("#canvas"); 
+ var ctx = canvas.getContext('2d');
+//  var canvas_stream = canvas.captureStream(25); // 25 FPS
+ 
+ if (navigator.mediaDevices.getUserMedia) {       
+     navigator.mediaDevices.getUserMedia({video: true})
+   .then(function(stream) {
+     video.srcObject = stream;
+
+     setInterval(
+        function () {
+            ctx.drawImage(video, 0, 0, 100, 100);
+        }, 1000/60);
+   })
+   .catch(function(err0r) {
+     console.log("Something went wrong!");
+   });
+ }
+</script>
+</body>
+</html>
+
