@@ -1,89 +1,120 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="utf-8">
-<meta content="stuff, to, help, search, engines, not" name="keywords">
-<meta content="What this page is about." name="description">
-<meta content="Display Webcam Stream" name="title">
-<title>Display Webcam Stream</title>
-  
-<style>
-#container {
-    margin: 0px auto;
-    width: 500px;
-    height: 375px;
-    border: 10px #333 solid;
-}
-#videoElement {
-    width: 250px;
-    height: 175px;
-    background-color: #666;
-}
 
-canvas {
-    width: 250px;
-    height: 175px;
-    background-color: #666;
-}
-</style>
+<head>
+  <meta charset="utf-8">
+  <meta content="stuff, to, help, search, engines, not" name="keywords">
+  <meta content="What this page is about." name="description">
+  <meta content="Display Webcam Stream" name="title">
+  <title>Display Webcam Stream</title>
+    
+  <style>
+    #container {
+      margin: 0px auto;
+      border: 10px #333 solid;
+    }
+
+    #videoElement {
+      width: 250px;
+      height: 175px;
+      background-color: #666;
+    }
+
+    canvas {
+      width: 250px;
+      height: 175px;
+      background-color: #666;
+    }
+  </style>
 </head>
   
+
 <body>
-<div id="container">
-    <video autoplay="true" id="videoElement" hidden></video>
+  <div id="container">
+        <video autoplay="true" id="videoElement" hidden></video>
 
     <canvas height=100px width=100px id="canvas"></canvas>
     <canvas height=100px width=100px id="canvas2"></canvas>
-</div>
-<script>
- var video = document.querySelector("#videoElement");
+    <canvas height=100px width=100px id="canvas3"></canvas>
+  </div>
+  <script>
+    var video = document.querySelector("#videoElement");
 
 
 
- var canvas = document.querySelector("#canvas"); 
- var ctx = canvas.getContext('2d');
+    var canvas = document.querySelector("#canvas");
+    var ctx = canvas.getContext('2d');
 
- var canvas2 = document.querySelector("#canvas2"); 
- var ctx2 = canvas2.getContext('2d');
+    var canvas2 = document.querySelector("#canvas2");
+    var ctx2 = canvas2.getContext('2d');
+
+    var canvas3 = document.querySelector("#canvas3");
+    var ctx3 = canvas3.getContext('2d');
+
+    var current_frame, prev_frame;
 
 
+    var image;
+    //  var canvas_stream = canvas.captureStream(25); // 25 FPS
 
- var image;
-//  var canvas_stream = canvas.captureStream(25); // 25 FPS
+    function gray_scale_image(image_data) {
+      var data = image_data.data;
 
-function gray_scale_image(image_data){
-  var data = image_data.data;
-
-  for (var i = 0; i < data.length; i += 4) {
-      // var avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-      // data[i]     = avg; // red
-      data[i + 1] = data[i]; // green
-      data[i + 2] = data[i]; // blue
+      for (var i = 0; i < data.length; i += 4) {
+        // grayscale by isolating the red channel
+        data[i + 1] = data[i]; // green
+        data[i + 2] = data[i]; // blue
+      }
+      return image_data;
     }
-  return image_data;
- }
 
- 
- if (navigator.mediaDevices.getUserMedia) {       
-     navigator.mediaDevices.getUserMedia({video: true})
-   .then(function(stream) {
-     video.srcObject = stream;
+    function delta_frame(current_image){
+      if (!prev_frame){
+        prev_frame = current_image.data;
+        return current_image;
+      }
 
-     setInterval(
-        function () {
-            ctx.drawImage(video, 0, 0, 100, 100);
-            image = ctx.getImageData(0, 0, 100, 100);
-            var gray_image = gray_scale_image(image);
-            ctx2.putImageData(gray_image, 0, 0);
-        }, 1000/60);
-   })
-   .catch(function(err0r) {
-     console.log("Something went wrong!");
-   });
- }
+      var old_data = current_image.data.slice();
+      var data = current_image.data;
+
+      for (var i = 0; i < data.length; i += 4) {
+        // grayscale by isolating the red channel
+        data[i] = Math.abs(prev_frame[i] - data[i]);
+        data[i + 1] = data[i]; // green
+        data[i + 2] = data[i]; // blue
+      }
+      prev_frame = old_data;
+      
+
+      return current_image 
+
+    }
 
 
-</script>
+    if (navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function (stream) {
+          video.srcObject = stream;
+
+          setInterval(
+            function () {
+              ctx.drawImage(video, 0, 0, 100, 100);
+
+              image = ctx.getImageData(0, 0, 100, 100);
+              var gray_image = gray_scale_image(image);
+              ctx2.putImageData(gray_image, 0, 0);
+
+              var delta_image_data = delta_frame(image)
+              ctx3.putImageData(delta_image_data, 0, 0);
+            }, 1000 / 60);
+        })
+        .catch(function (err0r) {
+          console.log("Something went wrong!");
+        });
+    }
+
+
+  </script>
 </body>
-</html>
 
+</html>
