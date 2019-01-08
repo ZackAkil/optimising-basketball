@@ -36,6 +36,7 @@
     <canvas height=100px width=100px id="canvas"></canvas>
     <canvas height=100px width=100px id="canvas2"></canvas>
     <canvas height=100px width=100px id="canvas3"></canvas>
+    <canvas height=100px width=100px id="canvas4"></canvas>
   </div>
   <script>
     var video = document.querySelector("#videoElement");
@@ -51,7 +52,15 @@
     var canvas3 = document.querySelector("#canvas3");
     var ctx3 = canvas3.getContext('2d');
 
+    var canvas4 = document.querySelector("#canvas4");
+    var ctx4 = canvas4.getContext('2d');
+
     var current_frame, prev_frame;
+
+    const trail_window = 75;
+
+    var delta_frames = new Array();
+
 
 
     var image;
@@ -68,8 +77,48 @@
       return image_data;
     }
 
-    function delta_frame(current_image){
-      if (!prev_frame){
+    var trail_frame = Array(40000);
+    for (var i = 0; i < trail_frame.length; i++) {
+      trail_frame[i] = 0;
+    }
+
+    function delta_frame_contcat(frame) {
+
+      var data = frame.data;
+
+      
+
+      for (var i = 0; i < data.length; i += 4) {
+        trail_frame[i] += data[i]
+        trail_frame[i + 1] = trail_frame[i]
+        trail_frame[i + 2] = trail_frame[i]
+        trail_frame[i + 3] = 255
+      }
+
+      delta_frames.push(frame.data.slice());
+
+
+      if (delta_frames.length > trail_window){
+        var subtracter =  delta_frames.shift();
+
+        for (var i = 0; i < data.length; i += 4) {
+        trail_frame[i] -= subtracter[i]
+        trail_frame[i + 1] = trail_frame[i]
+        trail_frame[i + 2] = trail_frame[i]
+        trail_frame[i + 3] = 255
+        }
+
+      }
+
+      frame.data = trail_frame;
+
+
+
+      return frame;
+    }
+
+    function delta_frame(current_image) {
+      if (!prev_frame) {
         prev_frame = current_image.data;
         return current_image;
       }
@@ -79,14 +128,19 @@
 
       for (var i = 0; i < data.length; i += 4) {
         // grayscale by isolating the red channel
-        data[i] = Math.abs(prev_frame[i] - data[i]);
+        if (Math.abs(prev_frame[i] - data[i]) > 20) {
+          data[i] = 255;
+        } else {
+          data[i] = 0;
+        }
+        // data[i] = Math.abs(prev_frame[i] - data[i]);
         data[i + 1] = data[i]; // green
         data[i + 2] = data[i]; // blue
       }
       prev_frame = old_data;
-      
 
-      return current_image 
+
+      return current_image
 
     }
 
@@ -106,6 +160,17 @@
 
               var delta_image_data = delta_frame(image)
               ctx3.putImageData(delta_image_data, 0, 0);
+
+              var trail = delta_frame_contcat(delta_image_data)
+              var new_image = ctx4.createImageData(100, 100);
+
+              var data = new Uint8ClampedArray(trail_frame);
+
+              for (var i = 0; i < data.length; i ++) {
+                new_image.data[i] = data[i];
+              }
+
+              ctx4.putImageData(new_image, 0, 0);
             }, 1000 / 60);
         })
         .catch(function (err0r) {
