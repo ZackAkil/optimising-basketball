@@ -20,7 +20,7 @@
     background-color: #666;
 }
 
-#canvas {
+canvas {
     width: 250px;
     height: 175px;
     background-color: #666;
@@ -32,13 +32,37 @@
 <div id="container">
     <video autoplay="true" id="videoElement" hidden></video>
 
-    <canvas height=100px width=100px id="canvas">
+    <canvas height=100px width=100px id="canvas"></canvas>
+    <canvas height=100px width=100px id="canvas2"></canvas>
 </div>
 <script>
  var video = document.querySelector("#videoElement");
+
+
+
  var canvas = document.querySelector("#canvas"); 
  var ctx = canvas.getContext('2d');
+
+ var canvas2 = document.querySelector("#canvas2"); 
+ var ctx2 = canvas2.getContext('2d');
+
+
+
+ var image;
 //  var canvas_stream = canvas.captureStream(25); // 25 FPS
+
+function gray_scale_image(image_data){
+  var data = image_data.data;
+
+  for (var i = 0; i < data.length; i += 4) {
+      // var avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      // data[i]     = avg; // red
+      data[i + 1] = data[i]; // green
+      data[i + 2] = data[i]; // blue
+    }
+  return image_data;
+ }
+
  
  if (navigator.mediaDevices.getUserMedia) {       
      navigator.mediaDevices.getUserMedia({video: true})
@@ -48,12 +72,17 @@
      setInterval(
         function () {
             ctx.drawImage(video, 0, 0, 100, 100);
+            image = ctx.getImageData(0, 0, 100, 100);
+            var gray_image = gray_scale_image(image);
+            ctx2.putImageData(gray_image, 0, 0);
         }, 1000/60);
    })
    .catch(function(err0r) {
      console.log("Something went wrong!");
    });
  }
+
+
 </script>
 </body>
 </html>
