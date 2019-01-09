@@ -7,7 +7,7 @@
   <meta content="What this page is about." name="description">
   <meta content="Display Webcam Stream" name="title">
   <title>Display Webcam Stream</title>
-    
+
   <style>
     #container {
       margin: 0px auto;
@@ -26,19 +26,59 @@
       background-color: #666;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.5"> </script>
+  <script src="smoothie.js"> </script>
 </head>
-  
 
 <body>
   <div id="container">
-        <video autoplay="true" id="videoElement" hidden></video>
+
+    <video autoplay="true" id="videoElement" controls>
+      <source src="output_320_full.mp4" type="video/mp4">
+    </video>
 
     <canvas height=180px width=320px id="canvas"></canvas>
     <canvas height=180px width=320px id="canvas2"></canvas>
     <canvas height=180px width=320px id="canvas3"></canvas>
     <canvas height=180px width=320px id="canvas4"></canvas>
   </div>
+
+  <canvas id="chart" width="400" height="100"></canvas>
+
   <script>
+
+     var random = new TimeSeries();
+
+    var model;
+
+    tf.loadModel('js/model.json').then((m) => {
+      model = m;
+      console.log('loaded model');
+
+      createTimeline();
+      start_frame_feeding();
+
+      setInterval(
+        function () {
+          var pixels = tf.fromPixels(canvas4, 1).toFloat().div(255);
+          var pred = model.predict(pixels.expandDims()).dataSync()[0];
+          console.log(pred);
+          random.append(new Date().getTime(), pred)
+        }, 50)
+    });
+
+
+
+      function createTimeline() {
+        var chart = new SmoothieChart({minValue:0,maxValue:1});
+        chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
+        chart.streamTo(document.getElementById("chart"), 500);
+      }
+
+
+
+
+
     var video = document.querySelector("#videoElement");
 
 
@@ -64,7 +104,7 @@
     const frame_height = 180;
     const frame_width = 320;
 
-    const frame_size = frame_width*frame_height*4;
+    const frame_size = frame_width * frame_height * 4;
 
     var image;
     //  var canvas_stream = canvas.captureStream(25); // 25 FPS
@@ -89,7 +129,7 @@
 
       var data = frame.data;
 
-      
+
 
       for (var i = 0; i < data.length; i += 4) {
         trail_frame[i] += data[i]
@@ -101,14 +141,14 @@
       delta_frames.push(frame.data.slice());
 
 
-      if (delta_frames.length > trail_window){
-        var subtracter =  delta_frames.shift();
+      if (delta_frames.length > trail_window) {
+        var subtracter = delta_frames.shift();
 
         for (var i = 0; i < data.length; i += 4) {
-        trail_frame[i] -= subtracter[i]
-        trail_frame[i + 1] = trail_frame[i]
-        trail_frame[i + 2] = trail_frame[i]
-        trail_frame[i + 3] = 255
+          trail_frame[i] -= subtracter[i]
+          trail_frame[i + 1] = trail_frame[i]
+          trail_frame[i + 2] = trail_frame[i]
+          trail_frame[i + 3] = 255
         }
 
       }
@@ -147,37 +187,42 @@
 
     }
 
+    function start_frame_feeding() {
+      setInterval(
+        function () {
+          ctx.drawImage(video, 0, 0, frame_width, frame_height);
 
-    if (navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function (stream) {
-          video.srcObject = stream;
+          image = ctx.getImageData(0, 0, frame_width, frame_height);
+          var gray_image = gray_scale_image(image);
+          ctx2.putImageData(gray_image, 0, 0);
 
-          setInterval(
-            function () {
-              ctx.drawImage(video, 0, 0, frame_width, frame_height);
+          var delta_image_data = delta_frame(image)
+          ctx3.putImageData(delta_image_data, 0, 0);
 
-              image = ctx.getImageData(0, 0, frame_width, frame_height);
-              var gray_image = gray_scale_image(image);
-              ctx2.putImageData(gray_image, 0, 0);
+          var trail = delta_frame_contcat(delta_image_data)
 
-              var delta_image_data = delta_frame(image)
-              ctx3.putImageData(delta_image_data, 0, 0);
-
-              var trail = delta_frame_contcat(delta_image_data)
-
-              var new_image = ctx4.createImageData(frame_width, frame_height);
-              var data = new Uint8ClampedArray(trail_frame);
-              for (var i = 0; i < data.length; i ++) {
-                new_image.data[i] = data[i];
-              }
-              ctx4.putImageData(new_image, 0, 0);
-            }, 1000 / 60);
-        })
-        .catch(function (err0r) {
-          console.log("Something went wrong!");
-        });
+          var new_image = ctx4.createImageData(frame_width, frame_height);
+          var data = new Uint8ClampedArray(trail_frame);
+          for (var i = 0; i < data.length; i++) {
+            new_image.data[i] = data[i];
+          }
+          ctx4.putImageData(new_image, 0, 0);
+        }, 1000 / 60);
     }
+
+
+    // if (navigator.mediaDevices.getUserMedia) {
+    //   navigator.mediaDevices.getUserMedia({ video: true })
+    //     .then(function (stream) {
+    //       video.srcObject = stream;
+
+    //       start_frame_feeding();
+    //     })
+    //     .catch(function (err0r) {
+    //       console.log("Something went wrong!");
+    //     });
+    // } 
+
 
 
   </script>
