@@ -15,14 +15,14 @@
     }
 
     #videoElement {
-      width: 320px;
-      height: 180px;
+      width: 160px;
+      height: 90px;
       background-color: #666;
     }
 
     canvas {
-      width: 320px;
-      height: 180px;
+      width: 160px;
+      height: 90px;
       background-color: #666;
     }
   </style>
@@ -37,21 +37,23 @@
       <source src="output_320_full.mp4" type="video/mp4">
     </video>
 
-    <canvas height=180px width=320px id="canvas"></canvas>
-    <canvas height=180px width=320px id="canvas2"></canvas>
-    <canvas height=180px width=320px id="canvas3"></canvas>
-    <canvas height=180px width=320px id="canvas4"></canvas>
+    <canvas height=90px width=160px id="canvas"></canvas>
+    <canvas height=90px width=160px id="canvas2"></canvas>
+    <canvas height=90px width=160px id="canvas3"></canvas>
+    <canvas height=90px width=160px id="canvas4"></canvas>
   </div>
 
   <canvas id="chart" width="400" height="100"></canvas>
 
+  <h3 id="fps"></h3>
+
   <script>
 
-     var random = new TimeSeries();
+    var random = new TimeSeries();
 
     var model;
 
-    tf.loadModel('js/model.json').then((m) => {
+    tf.loadModel('js_160/model.json').then((m) => {
       model = m;
       console.log('loaded model');
 
@@ -62,18 +64,18 @@
         function () {
           var pixels = tf.fromPixels(canvas4, 1).toFloat().div(255);
           var pred = model.predict(pixels.expandDims()).dataSync()[0];
-          console.log(pred);
+          // console.log(pred);
           random.append(new Date().getTime(), pred)
         }, 50)
     });
 
 
 
-      function createTimeline() {
-        var chart = new SmoothieChart({minValue:0,maxValue:1});
-        chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
-        chart.streamTo(document.getElementById("chart"), 500);
-      }
+    function createTimeline() {
+      var chart = new SmoothieChart({ minValue: 0, maxValue: 1 });
+      chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
+      chart.streamTo(document.getElementById("chart"), 500);
+    }
 
 
 
@@ -101,8 +103,8 @@
 
     var delta_frames = new Array();
 
-    const frame_height = 180;
-    const frame_width = 320;
+    const frame_height = 90;
+    const frame_width = 160;
 
     const frame_size = frame_width * frame_height * 4;
 
@@ -187,6 +189,23 @@
 
     }
 
+
+
+    var lastCalledTime;
+    var fps;
+
+    function cal_fps() {
+
+      if (!lastCalledTime) {
+        lastCalledTime = performance.now();
+        fps = 0;
+        return;
+      }
+      delta = (performance.now() - lastCalledTime) / 1000;
+      lastCalledTime = performance.now();
+      fps = 1 / delta;
+    }
+
     function start_frame_feeding() {
       setInterval(
         function () {
@@ -207,10 +226,20 @@
             new_image.data[i] = data[i];
           }
           ctx4.putImageData(new_image, 0, 0);
+
+          cal_fps();
+
+          // document.getElementById("fps").innerHTML = requestAnimFrame().toString()
+
         }, 1000 / 60);
     }
 
+    setInterval(
+        function () {
 
+          document.getElementById("fps").innerHTML = fps.toString();
+
+        }, 1000 / 5);
     // if (navigator.mediaDevices.getUserMedia) {
     //   navigator.mediaDevices.getUserMedia({ video: true })
     //     .then(function (stream) {
@@ -222,6 +251,8 @@
     //       console.log("Something went wrong!");
     //     });
     // } 
+
+
 
 
 
