@@ -191,19 +191,22 @@
 
 
 
-    var lastCalledTime;
+
     var fps;
 
-    function cal_fps() {
+    const times = [];
 
-      if (!lastCalledTime) {
-        lastCalledTime = performance.now();
-        fps = 0;
-        return;
-      }
-      delta = (performance.now() - lastCalledTime) / 1000;
-      lastCalledTime = performance.now();
-      fps = 1 / delta;
+
+    function cal_fps() {
+      window.requestAnimationFrame(() => {
+        const now = performance.now();
+        while (times.length > 0 && times[0] <= now - 1000) {
+          times.shift();
+        }
+        times.push(now);
+        fps = times.length;
+        refreshLoop();
+      });
     }
 
     function start_frame_feeding() {
@@ -235,11 +238,11 @@
     }
 
     setInterval(
-        function () {
+      function () {
 
-          document.getElementById("fps").innerHTML = fps.toString();
+        document.getElementById("fps").innerHTML = fps.toString();
 
-        }, 1000 / 5);
+      }, 1000 / 5);
     // if (navigator.mediaDevices.getUserMedia) {
     //   navigator.mediaDevices.getUserMedia({ video: true })
     //     .then(function (stream) {
