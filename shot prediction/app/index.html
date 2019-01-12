@@ -167,6 +167,7 @@
 
         var data_points = frame_data_to_data_points(trail_frame_image.data, frame_width, frame_height)
         data_points = crop_data_points(data_points, x_crop, y_crop)
+        data_points = translate_data_points_to_origin(data_points, x_crop, y_crop)
         display_data_points_to_graph(data_points)
       }
 
@@ -186,6 +187,19 @@
             x.push(data.x[i])
             y.push(data.y[i])
           }
+        }
+
+        return { "x": x, "y": y }
+      }
+
+      function translate_data_points_to_origin(data, x_from, y_from) {
+
+        var x = Array()
+        var y = Array()
+
+        for (var i = 0; i < data.x.length; i++) {
+          x.push(x_from - data.x[i])
+          y.push(y_from - data.y[i])
         }
 
         return { "x": x, "y": y }
