@@ -80,6 +80,9 @@
 
       var model_where;
 
+      var x_crop = 0
+      var y_crop = 0
+
       tf.loadModel('js_160_where/model.json').then((m) => {
         model_where = m;
         console.log('loaded model where');
@@ -90,8 +93,12 @@
             var pred = model_where.predict(pixels.expandDims()).dataSync();
             // console.log(pred);
             draw_where(pred[0], pred[1]);
+            x_crop = pred[0] * frame_width
+            y_crop = pred[1] * frame_height
           }, 100)
       });
+
+
 
       var canvas5 = document.querySelector("#canvas5");
       var ctx5 = canvas5.getContext('2d');
@@ -137,20 +144,51 @@
         return { "x": x, "y": y }
       }
 
-      function display_dta_points_to_graph(data_points) {
+      function display_data_points_to_graph(data_points) {
 
         data_points["type"] = "scatter"
-        "scatter"
         data_points["mode"] = "markers"
-        "markers"
-        Plotly.newPlot('pointData', [data_points]);
+
+        var layout = {
+          xaxis: { range: [0, frame_width] },
+          yaxis: { range: [0, frame_height] }
+        };
+
+        Plotly.newPlot('pointData', [data_points], layout);
       }
 
       function displaye_trail_as_points() {
 
-        var data_points = frame_data_to_data_points(trail_frame_image.data, frame_width, frame_height)
-        display_dta_points_to_graph(data_points)
+        // // to stream trail to plot
+        // setInterval(
+        // function () {
+        //   displaye_trail_as_points()
+        // }, 1000)
 
+        var data_points = frame_data_to_data_points(trail_frame_image.data, frame_width, frame_height)
+        data_points = crop_data_points(data_points, x_crop, y_crop)
+        display_data_points_to_graph(data_points)
+      }
+
+      setInterval(
+        function () {
+          displaye_trail_as_points()
+        }, 1000)
+
+
+      function crop_data_points(data, x_from, y_from) {
+        var x = Array()
+        var y = Array()
+
+        for (var i = 0; i < data.x.length; i++) {
+
+          if ((data.x[i] < x_from) & (data.y[i] < y_from)) {
+            x.push(data.x[i])
+            y.push(data.y[i])
+          }
+        }
+
+        return { "x": x, "y": y }
       }
 
 
