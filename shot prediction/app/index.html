@@ -41,6 +41,7 @@
     <canvas height=90px width=160px id="canvas2"></canvas>
     <canvas height=90px width=160px id="canvas3"></canvas>
     <canvas height=90px width=160px id="canvas4"></canvas>
+    <canvas height=90px width=160px id="canvas5"></canvas>
   </div>
 
   <canvas id="chart" width="400" height="100"></canvas>
@@ -70,6 +71,40 @@
     });
 
 
+    var model_where;
+
+    tf.loadModel('js_160_where/model.json').then((m) => {
+      model_where = m;
+      console.log('loaded model where');
+
+      setInterval(
+        function () {
+          var pixels = tf.fromPixels(canvas4, 1).toFloat().div(255);
+          var pred = model_where.predict(pixels.expandDims()).dataSync();
+          console.log(pred);
+          draw_where(pred[0], pred[1]); 
+        }, 100)
+    });
+
+        var canvas5 = document.querySelector("#canvas5");
+    var ctx5 = canvas5.getContext('2d');
+
+    function draw_where(x, y) {
+
+
+      ctx5.putImageData(trail_frame_image, 0, 0);
+      ctx5.beginPath();
+      ctx5.moveTo(x*frame_width, 0);
+      ctx5.lineTo(x*frame_width, frame_height);
+      ctx5.moveTo(0, y*frame_height);
+      ctx5.lineTo(frame_width, y*frame_height);
+
+      ctx5.strokeStyle = "red";
+      ctx5.lineWidth = 5;
+      ctx5.stroke();
+    }
+
+
 
     function createTimeline() {
       var chart = new SmoothieChart({ minValue: 0, maxValue: 1 });
@@ -96,6 +131,8 @@
 
     var canvas4 = document.querySelector("#canvas4");
     var ctx4 = canvas4.getContext('2d');
+
+
 
     var current_frame, prev_frame;
 
@@ -190,7 +227,7 @@
     }
 
 
-
+    var trail_frame_image;
 
     var fps;
 
@@ -205,7 +242,7 @@
         }
         times.push(now);
         fps = times.length;
-        refreshLoop();
+        // refreshLoop();
       });
     }
 
@@ -228,6 +265,7 @@
           for (var i = 0; i < data.length; i++) {
             new_image.data[i] = data[i];
           }
+          trail_frame_image = new_image;
           ctx4.putImageData(new_image, 0, 0);
 
           cal_fps();
