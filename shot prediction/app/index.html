@@ -49,6 +49,10 @@
 
     <h3 id="fps"></h3>
 
+    <button onclick="capture_train_display()">Click me</button>
+
+    <h2 id="angle"></h3>
+
     <div id="pointData">
       <!-- Plotly chart will be drawn inside this DIV -->
     </div>
@@ -59,34 +63,99 @@
 
       const pi_on_180 = 0.017453292519943295
       function deg2rad(deg) {
-        return deg.mul( pi_on_180)
+        return deg.mul(pi_on_180)
       }
 
 
-      const angle = tf.variable(tf.scalar(60));
-      const power = tf.variable(tf.scalar(120));
-      const x_trans = tf.variable(tf.scalar(0));
+      const angle = tf.variable(tf.scalar(50));
+      const power = tf.variable(tf.scalar(30));
       const y_trans = tf.variable(tf.scalar(0));
 
-      function predict_angle(x) {
+      function predict(x) {
 
         return tf.tidy(() => {
 
-          var lhs = (x.add(x_trans)).mul(tf.tan(deg2rad(angle)))
-          var rhs_top = (x.add(x_trans).pow(2)).mul(9.81)
+          var lhs = x.mul(tf.tan(deg2rad(angle)))
+          var rhs_top = (x.pow(2)).mul(9.81)
           var rhs_bottom = ((power.pow(2)).mul(2)).mul(tf.cos(deg2rad(angle)).pow(2))
 
           return (lhs.sub(rhs_top.div(rhs_bottom))).add(y_trans)
-
-          // return x.add(7);
-
-          // return (x) - (tlhs / ( * ()))) + y_trans
-
-          // return output;
         });
       }
 
+      function loss(predictions, labels) {
+        // Subtract our labels (actual values) from predictions, square the results,
+        // and take the mean.
+        const meanSquareError = predictions.sub(labels).square().mean();
+        return meanSquareError;
+      }
 
+
+      function train(xs, ys, numIterations = 1000) {
+
+        const learningRate = 10;
+        const optimizer = tf.train.adam(learningRate);
+
+        for (let iter = 0; iter < numIterations; iter++) {
+          optimizer.minimize(() => {
+            const predsYs = predict(xs);
+            return loss(predsYs, ys);
+          });
+        }
+      }
+
+      function get_model_state_datat_points(n = 150) {
+
+        var x = Array()
+
+        for (var i = 0; i < n; i++) {
+          x.push(i)
+        }
+
+        var y = predict(tf.tensor(x)).dataSync()
+
+        return { "x": x, "y": y }
+
+      }
+
+      function display_model() {
+
+
+        var data_points = get_model_state_datat_points()
+
+        // data_points["type"] = "scatter"
+        // data_points["mode"] = "markers"
+
+        var layout = {
+          xaxis: { range: [0, frame_width] },
+          yaxis: { range: [0, frame_height] }
+        };
+
+        Plotly.newPlot('pointData', [data_points], layout);
+      }
+
+      function capture_train_display() {
+
+        var data = capture_trail_as_points()
+        train(tf.tensor(data.x), tf.tensor(data.y))
+
+        var model_data = get_model_state_datat_points()
+
+
+        data["type"] = "scatter"
+        data["mode"] = "markers"
+
+        var layout = {
+          xaxis: { range: [0, frame_width] },
+          yaxis: { range: [0, frame_height] }
+        };
+
+        Plotly.newPlot('pointData', [data, model_data], layout);
+
+        document.getElementById("angle").innerHTML = angle.dataSync()[0].toString();
+
+
+      }
 
 
 
@@ -106,10 +175,26 @@
           function () {
             var pixels = tf.fromPixels(canvas4, 1).toFloat().div(255);
             var pred = model.predict(pixels.expandDims()).dataSync()[0];
+            if (pred >0.7){
+              de_bounce_predict();
+
+            }
             // console.log(pred);
             random.append(new Date().getTime(), pred)
           }, 50)
       });
+
+      var time_since_last_predict = Date.now();
+
+      function de_bounce_predict(){
+        if ((Date.now() - time_since_last_predict) > 5000){
+          time_since_last_predict = Date.now();
+          capture_train_display();
+        }
+
+                      
+
+      }
 
 
       var model_where;
@@ -178,6 +263,8 @@
         return { "x": x, "y": y }
       }
 
+
+
       function display_data_points_to_graph(data_points) {
 
         data_points["type"] = "scatter"
@@ -189,6 +276,14 @@
         };
 
         Plotly.newPlot('pointData', [data_points], layout);
+      }
+
+      function capture_trail_as_points() {
+
+        var data_points = frame_data_to_data_points(trail_frame_image.data, frame_width, frame_height)
+        data_points = crop_data_points(data_points, x_crop, y_crop)
+        data_points = translate_data_points_to_origin(data_points, x_crop, y_crop)
+        return data_points
       }
 
       function displaye_trail_as_points() {
@@ -205,10 +300,10 @@
         display_data_points_to_graph(data_points)
       }
 
-//       setInterval(
-//         function () {
-//           displaye_trail_as_points()
-//         }, 1000)
+      //       setInterval(
+      //         function () {
+      //           displaye_trail_as_points()
+      //         }, 1000)
 
 
       function crop_data_points(data, x_from, y_from) {
