@@ -57,6 +57,40 @@
 
     <script>
 
+      const pi_on_180 = 0.017453292519943295
+      function deg2rad(deg) {
+        return deg.mul( pi_on_180)
+      }
+
+
+      const angle = tf.variable(tf.scalar(60));
+      const power = tf.variable(tf.scalar(120));
+      const x_trans = tf.variable(tf.scalar(0));
+      const y_trans = tf.variable(tf.scalar(0));
+
+      function predict_angle(x) {
+
+        return tf.tidy(() => {
+
+          var lhs = (x.add(x_trans)).mul(tf.tan(deg2rad(angle)))
+          var rhs_top = (x.add(x_trans).pow(2)).mul(9.81)
+          var rhs_bottom = ((power.pow(2)).mul(2)).mul(tf.cos(deg2rad(angle)).pow(2))
+
+          return (lhs.sub(rhs_top.div(rhs_bottom))).add(y_trans)
+
+          // return x.add(7);
+
+          // return (x) - (tlhs / ( * ()))) + y_trans
+
+          // return output;
+        });
+      }
+
+
+
+
+
+
       var random = new TimeSeries();
 
       var model;
