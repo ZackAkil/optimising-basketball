@@ -175,7 +175,7 @@
           function () {
             var pixels = tf.fromPixels(canvas4, 1).toFloat().div(255);
             var pred = model.predict(pixels.expandDims()).dataSync()[0];
-            if (pred >0.7){
+            if (pred >0.8){
               de_bounce_predict();
 
             }
