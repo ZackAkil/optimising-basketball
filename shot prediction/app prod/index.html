@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta content="stuff, to, help, search, engines, not" name="keywords">
+  <meta content="What this page is about." name="description">
+  <meta content="Display Webcam Stream" name="title">
+  <title>Display Webcam Stream</title>
+
+  <style>
+    #container {
+      margin: 0px auto;
+      border: 10px #333 solid;
+    }
+
+    #videoElement {
+      width: 160px;
+      height: 90px;
+      background-color: #666;
+    }
+
+    canvas {
+      width: 160px;
+      height: 90px;
+      background-color: #666;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.5"> </script>
+  <script src="smoothie.js"> </script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+
+  <body>
+    <div id="container">
+
+      <video autoplay="true" id="videoElement" controls>
+        <source src="output_320_full.mp4" type="video/mp4">
+      </video>
+
+      <canvas height=90px width=160px id="canvas"></canvas>
+      <canvas height=90px width=160px id="canvas2"></canvas>
+      <canvas height=90px width=160px id="canvas3"></canvas>
+      <canvas height=90px width=160px id="canvas4"></canvas>
+      <canvas height=90px width=160px id="canvas5"></canvas>
+    </div>
+
+    <canvas id="chart" width="400" height="100"></canvas>
+
+    <h3 id="fps"></h3>
+
+    <button onclick="capture_train_display()">Click me</button>
+
+    <h2 id="angle"></h3>
+
+    <div id="pointData">
+      <!-- Plotly chart will be drawn inside this DIV -->
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+
+</html>
