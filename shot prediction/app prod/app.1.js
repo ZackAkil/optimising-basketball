@@ -85,14 +85,14 @@ class DeltaCanvas extends CanvasScreen {
   addFrame(frame) {
 
     if (!this.oldFrame) {
-      this.oldFrame = frame.slice()
+      this.oldFrame = frame
       for (var i = 0; i < frame.length; i++) {
         this.deltaFrame.data[i] = this.oldFrame[i];
       }
     } else {
 
       for (var i = 0; i < frame.length; i += 4) {
-        // grayscale by isolating the red channel
+        // cast to binary delta
         if (Math.abs(this.oldFrame[i] - frame[i]) > this.threshold) {
           this.deltaFrame.data[i] = 255;
         } else {
