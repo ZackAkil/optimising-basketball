@@ -1,6 +1,4 @@
 
-
-
 class CanvasScreen {
   constructor(elementId, width, height) {
     this.elementId = elementId
@@ -9,6 +7,10 @@ class CanvasScreen {
 
     this.width = width
     this.height = height
+  }
+
+  drawVideo(videoElement) {
+    this.ctx.drawImage(videoElement, 0, 0, this.width, this.height)
   }
 
   getImage() {
@@ -31,5 +33,28 @@ class CanvasScreen {
     this.ctx.strokeStyle = "red"
     this.ctx.lineWidth = 5
     this.ctx.stroke()
+  }
+
+  getGrayScaleImage() {
+    var image = this.getImage()
+    var data = image.data
+    for (var i = 0; i < data.length; i += 4) {
+      // grayscale by isolating the red channel
+      data[i + 1] = data[i] // green
+      data[i + 2] = data[i] // blue
+    }
+    return image
+  }
+}
+
+class DeltaCanvas extends CanvasScreen {
+  constructor(elementId, width, height) {
+      super(elementId, width, height)
+
+      this.oldFrame = null
+  }
+
+  displayNewFrame(){
+    console.log("hahah")
   }
 }
