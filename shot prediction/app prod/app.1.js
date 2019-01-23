@@ -91,21 +91,21 @@ class DeltaCanvas extends CanvasScreen {
       }
     } else {
 
-      var data = this.deltaFrame.data
-
       for (var i = 0; i < frame.length; i += 4) {
         // grayscale by isolating the red channel
         if (Math.abs(this.oldFrame[i] - frame[i]) > this.threshold) {
-          data[i] = 255;
+          this.deltaFrame.data[i] = 255;
         } else {
-          data[i] = 0;
+          this.deltaFrame.data[i] = 0;
         }
-        data[i + 1] = data[i]; // green
-        data[i + 2] = data[i]; // blue
+        this.deltaFrame.data[i + 1] = this.deltaFrame.data[i]; // green
+        this.deltaFrame.data[i + 2] = this.deltaFrame.data[i]; // blue
       }
       this.oldFrame = frame
     }
+    this.displayCurrentDelta()
   }
+
 
   displayCurrentDelta() {
     this.setImage(this.deltaFrame)

@@ -61,22 +61,29 @@
     <script src="app.1.js"></script>
     <script>
 
-      var video = document.querySelector("#videoElement");
-      var videoFeed = new CanvasScreen('canvas', 160, 90)
-      var deltaFeed = new DeltaCanvas('canvas2', 160, 90)
-
-      deltaFeed.watchUpdate = function(){
-        deltaFeed.addFrame(videoFeed.getGrayScaleImage().data)
-        deltaFeed.displayCurrentDelta()
-      }
-      videoFeed.addWatcher(deltaFeed)
+      window.addEventListener('load', function () {
+        console.log('All assets are loaded')
 
 
-      function app() {
-        videoFeed.drawVideo(video)
-      }
+        var video = document.querySelector("#videoElement");
+        var videoFeed = new CanvasScreen('canvas', 160, 90)
+        var deltaFeed = new DeltaCanvas('canvas2', 160, 90)
 
-      setInterval(app, 1000 / 10);
+        deltaFeed.watchUpdate = function () {
+          deltaFeed.addFrame(videoFeed.getGrayScaleImage().data)
+        }
+        videoFeed.addWatcher(deltaFeed)
+
+
+        function app() {
+          videoFeed.drawVideo(video)
+        }
+
+        setInterval(app, 1000 / 10);
+      })
+
+
+
 
     </script>
 </body>
