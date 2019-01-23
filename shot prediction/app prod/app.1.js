@@ -1,6 +1,30 @@
 
-class CanvasScreen {
+class Watcher{
+  constructor(){
+    this.watchList = Array()
+  }
+
+  updateWatchers(){
+    this.watchList.forEach(function(screen) {
+      screen.watchChange()
+    });
+  }
+
+  addWatcher(watcher){
+    this.watchList.push(watcher)
+  }
+
+  watchUpdate(){
+    console.log("Do something")
+  }
+
+}
+
+
+class CanvasScreen extends Watcher {
   constructor(elementId, width, height) {
+    super()
+    
     this.elementId = elementId
     this.element = document.querySelector("#" + this.elementId)
     this.ctx = this.element.getContext('2d')
