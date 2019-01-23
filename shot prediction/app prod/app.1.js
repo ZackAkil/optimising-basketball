@@ -80,15 +80,15 @@ class DeltaCanvas extends CanvasScreen {
     this.oldFrame = null
     this.threshold = threshold
     this.deltaFrame = this.ctx.createImageData(this.width, this.height)
+    for (var i = 0; i < this.deltaFrame.data.length; i++) {
+      this.deltaFrame.data[i] = 255
+    }
   }
 
   addFrame(frame) {
 
     if (!this.oldFrame) {
       this.oldFrame = frame
-      for (var i = 0; i < frame.length; i++) {
-        this.deltaFrame.data[i] = this.oldFrame[i];
-      }
     } else {
 
       for (var i = 0; i < frame.length; i += 4) {
@@ -116,14 +116,63 @@ class TrailCanvas extends CanvasScreen {
   constructor(elementId, width, height, trailLength = 75) {
     super(elementId, width, height)
 
-    this.trailFrame = null
+   
     this.trailLength = trailLength
+    this.trailFrames = new Array()
+
+    this.trailFrame = new Array(4 * width * height)
+    for (var i = 0; i < this.trailFrame.length; i+= 4) {
+      this.trailFrame[i] = 0
+      this.trailFrame[i+1] = 0
+      this.trailFrame[i+2] = 0
+    }
+
+    this.trailImage = this.ctx.createImageData(this.width, this.height)
+    for (var i = 0; i < this.trailImage.data.length; i+= 4) {
+      this.trailImage.data[i] = 255
+      this.trailImage.data[i+1] = 255
+      this.trailImage.data[i+2] = 255
+      this.trailImage.data[i+3] = 255
+    }
+
   }
 
   addFrame(frame) {
-    if (!this.oldFrame) {
-      oldFrame = frame
+
+    for (var i = 0; i < frame.length; i += 4) {
+      this.trailFrame[i] += frame[i]
+      this.trailFrame[i + 1] = this.trailFrame[i]
+      this.trailFrame[i + 2] = this.trailFrame[i]
+      this.trailFrame[i + 3] = 255
     }
+
+    this.trailFrames.push(frame);
+
+
+    if (this.trailFrames.length > this.trailLength) {
+      var subtracter = this.trailFrames.shift()
+
+      for (var i = 0; i < frame.length; i += 4) {
+        this.trailFrame[i] -= subtracter[i]
+        this.trailFrame[i + 1] = this.trailFrame[i]
+        this.trailFrame[i + 2] = this.trailFrame[i]
+        this.trailFrame[i + 3] = 255
+      }
+
+    }
+
+  }
+
+  displayCurrentTrailFrame(){
+
+    for (var i = 0; i < this.trailImage.data.length; i+=4) {
+      this.trailImage.data[i] = Math.min(255, this.trailFrame[i])
+      this.trailImage.data[i + 1] = this.trailImage.data[i]
+      this.trailImage.data[i + 2] = this.trailImage.data[i]
+      this.trailImage.data[i + 3] = 255
+    }
+
+    this.setImage(this.trailImage)
   }
 
 

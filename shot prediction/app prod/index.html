@@ -60,19 +60,30 @@
 
     <script src="app.1.js"></script>
     <script>
+   var video
+        var videoFeed
+        var deltaFeed
+        var trailFeed
 
       window.addEventListener('load', function () {
         console.log('All assets are loaded')
 
 
-        var video = document.querySelector("#videoElement");
-        var videoFeed = new CanvasScreen('canvas', 160, 90)
-        var deltaFeed = new DeltaCanvas('canvas2', 160, 90)
+        video = document.querySelector("#videoElement");
+        videoFeed = new CanvasScreen('canvas', 160, 90)
 
+        deltaFeed = new DeltaCanvas('canvas2', 160, 90)
         deltaFeed.watchUpdate = function () {
           deltaFeed.addFrame(videoFeed.getGrayScaleImage().data)
         }
         videoFeed.addWatcher(deltaFeed)
+
+        trailFeed = new TrailCanvas('canvas3', 160, 90)
+        trailFeed.watchUpdate = function () {
+          trailFeed.addFrame(deltaFeed.getImage().data)
+          trailFeed.displayCurrentTrailFrame()
+        }
+        deltaFeed.addWatcher(trailFeed)
 
 
         function app() {
