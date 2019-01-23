@@ -66,15 +66,14 @@
       var deltaFeed = new DeltaCanvas('canvas2', 160, 90)
 
       deltaFeed.watchUpdate = function(){
-        deltaFeed.setImage(videoFeed.getGrayScaleImage())
+        deltaFeed.addFrame(videoFeed.getGrayScaleImage().data)
+        deltaFeed.displayCurrentDelta()
       }
       videoFeed.addWatcher(deltaFeed)
 
 
       function app() {
         videoFeed.drawVideo(video)
-
-
       }
 
       setInterval(app, 1000 / 10);

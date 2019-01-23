@@ -79,31 +79,36 @@ class DeltaCanvas extends CanvasScreen {
 
     this.oldFrame = null
     this.threshold = threshold
-    this.deltaFrame = null
+    this.deltaFrame = this.ctx.createImageData(this.width, this.height)
   }
 
   addFrame(frame) {
+
     if (!this.oldFrame) {
-      this.oldFrame = frame
+      this.oldFrame = frame.slice()
+      for (var i = 0; i < frame.length; i++) {
+        this.deltaFrame.data[i] = this.oldFrame[i];
+      }
     } else {
 
-      var oldData = frame.slice();
-      var data = frame;
+      var data = this.deltaFrame.data
 
-      for (var i = 0; i < data.length; i += 4) {
+      for (var i = 0; i < frame.length; i += 4) {
         // grayscale by isolating the red channel
-        if (Math.abs(this.oldFrame[i] - data[i]) > this.threshold) {
+        if (Math.abs(this.oldFrame[i] - frame[i]) > this.threshold) {
           data[i] = 255;
         } else {
           data[i] = 0;
         }
-
+        data[i + 1] = data[i]; // green
+        data[i + 2] = data[i]; // blue
       }
+      this.oldFrame = frame
     }
   }
 
-  displayNewFrame() {
-    console.log("hahah")
+  displayCurrentDelta() {
+    this.setImage(this.deltaFrame)
   }
 }
 
