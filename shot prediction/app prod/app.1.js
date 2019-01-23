@@ -17,7 +17,6 @@ class Watcher {
   watchUpdate() {
     console.log("updated watchers")
   }
-
 }
 
 
@@ -134,7 +133,6 @@ class TrailCanvas extends CanvasScreen {
       this.trailImage.data[i+2] = 255
       this.trailImage.data[i+3] = 255
     }
-
   }
 
   addFrame(frame) {
@@ -158,9 +156,7 @@ class TrailCanvas extends CanvasScreen {
         this.trailFrame[i + 2] = this.trailFrame[i]
         this.trailFrame[i + 3] = 255
       }
-
     }
-
   }
 
   displayCurrentTrailFrame(){
@@ -173,11 +169,5 @@ class TrailCanvas extends CanvasScreen {
     }
 
     this.setImage(this.trailImage)
-  }
-
-
-  displayNewFrame() {
-
-    console.log("add trail")
   }
 }
