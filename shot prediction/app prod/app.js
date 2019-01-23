@@ -3,7 +3,6 @@ function deg2rad(deg) {
   return deg.mul(pi_on_180)
 }
 
-
 const angle = tf.variable(tf.scalar(50));
 const power = tf.variable(tf.scalar(30));
 const y_trans = tf.variable(tf.scalar(0));
@@ -26,7 +25,6 @@ function loss(predictions, labels) {
   const meanSquareError = predictions.sub(labels).square().mean();
   return meanSquareError;
 }
-
 
 function train(xs, ys, numIterations = 1000) {
 
@@ -225,11 +223,6 @@ function capture_trail_as_points() {
 
 function displaye_trail_as_points() {
 
-  // // to stream trail to plot
-  // setInterval(
-  // function () {
-  //   displaye_trail_as_points()
-  // }, 1000)
 
   var data_points = frame_data_to_data_points(trail_frame_image.data, frame_width, frame_height)
   data_points = crop_data_points(data_points, x_crop, y_crop)
@@ -237,10 +230,6 @@ function displaye_trail_as_points() {
   display_data_points_to_graph(data_points)
 }
 
-//       setInterval(
-//         function () {
-//           displaye_trail_as_points()
-//         }, 1000)
 
 
 function crop_data_points(data, x_from, y_from) {
@@ -438,17 +427,7 @@ setInterval(
     document.getElementById("fps").innerHTML = fps.toString();
 
   }, 1000 / 10);
-// if (navigator.mediaDevices.getUserMedia) {
-//   navigator.mediaDevices.getUserMedia({ video: true })
-//     .then(function (stream) {
-//       video.srcObject = stream;
 
-//       start_frame_feeding();
-//     })
-//     .catch(function (err0r) {
-//       console.log("Something went wrong!");
-//     });
-// } 
 
 
 
