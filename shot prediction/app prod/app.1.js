@@ -24,7 +24,7 @@ class Watcher{
 class CanvasScreen extends Watcher {
   constructor(elementId, width, height) {
     super()
-    
+
     this.elementId = elementId
     this.element = document.querySelector("#" + this.elementId)
     this.ctx = this.element.getContext('2d')
@@ -80,5 +80,17 @@ class DeltaCanvas extends CanvasScreen {
 
   displayNewFrame(){
     console.log("hahah")
+  }
+}
+
+class TrailCanvas extends CanvasScreen {
+  constructor(elementId, width, height) {
+      super(elementId, width, height)
+
+      this.trailFrame = null
+  }
+
+  displayNewFrame(){
+    console.log("add trail")
   }
 }
