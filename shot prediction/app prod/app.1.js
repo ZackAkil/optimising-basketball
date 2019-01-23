@@ -1,21 +1,21 @@
 
-class Watcher{
-  constructor(){
+class Watcher {
+  constructor() {
     this.watchList = Array()
   }
 
-  updateWatchers(){
-    this.watchList.forEach(function(screen) {
-      screen.watchChange()
+  updateWatchers() {
+    this.watchList.forEach(function (screen) {
+      screen.watchUpdate()
     });
   }
 
-  addWatcher(watcher){
+  addWatcher(watcher) {
     this.watchList.push(watcher)
   }
 
-  watchUpdate(){
-    console.log("Do something")
+  watchUpdate() {
+    console.log("updated watchers")
   }
 
 }
@@ -35,6 +35,7 @@ class CanvasScreen extends Watcher {
 
   drawVideo(videoElement) {
     this.ctx.drawImage(videoElement, 0, 0, this.width, this.height)
+    this.updateWatchers()
   }
 
   getImage() {
@@ -43,6 +44,7 @@ class CanvasScreen extends Watcher {
 
   setImage(image) {
     this.ctx.putImageData(image, 0, 0)
+    this.updateWatchers()
   }
 
   drawCross(x_ratio, y_ratio) {
@@ -72,25 +74,56 @@ class CanvasScreen extends Watcher {
 }
 
 class DeltaCanvas extends CanvasScreen {
-  constructor(elementId, width, height) {
-      super(elementId, width, height)
+  constructor(elementId, width, height, threshold = 20) {
+    super(elementId, width, height)
 
-      this.oldFrame = null
+    this.oldFrame = null
+    this.threshold = threshold
+    this.deltaFrame = null
   }
 
-  displayNewFrame(){
+  addFrame(frame) {
+    if (!this.oldFrame) {
+      this.oldFrame = frame
+    } else {
+
+      var oldData = frame.slice();
+      var data = frame;
+
+      for (var i = 0; i < data.length; i += 4) {
+        // grayscale by isolating the red channel
+        if (Math.abs(this.oldFrame[i] - data[i]) > this.threshold) {
+          data[i] = 255;
+        } else {
+          data[i] = 0;
+        }
+
+      }
+    }
+  }
+
+  displayNewFrame() {
     console.log("hahah")
   }
 }
 
 class TrailCanvas extends CanvasScreen {
-  constructor(elementId, width, height) {
-      super(elementId, width, height)
+  constructor(elementId, width, height, trailLength = 75) {
+    super(elementId, width, height)
 
-      this.trailFrame = null
+    this.trailFrame = null
+    this.trailLength = trailLength
   }
 
-  displayNewFrame(){
+  addFrame(frame) {
+    if (!this.oldFrame) {
+      oldFrame = frame
+    }
+  }
+
+
+  displayNewFrame() {
+
     console.log("add trail")
   }
 }

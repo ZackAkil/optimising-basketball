@@ -31,33 +31,55 @@
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 
-  <body>
-    <div id="container">
+<body>
+  <div id="container">
 
-      <video autoplay="true" id="videoElement" controls>
-        <source src="output_320_full.mp4" type="video/mp4">
-      </video>
+    <video autoplay="true" id="videoElement" controls>
+      <source src="output_320_full.mp4" type="video/mp4">
+    </video>
 
-      <canvas height=90px width=160px id="canvas"></canvas>
-      <canvas height=90px width=160px id="canvas2"></canvas>
-      <canvas height=90px width=160px id="canvas3"></canvas>
-      <canvas height=90px width=160px id="canvas4"></canvas>
-      <canvas height=90px width=160px id="canvas5"></canvas>
-    </div>
+    <canvas height=90px width=160px id="canvas"></canvas>
+    <canvas height=90px width=160px id="canvas2"></canvas>
+    <canvas height=90px width=160px id="canvas3"></canvas>
+    <canvas height=90px width=160px id="canvas4"></canvas>
+    <canvas height=90px width=160px id="canvas5"></canvas>
+  </div>
 
-    <canvas id="chart" width="400" height="100"></canvas>
+  <canvas id="chart" width="400" height="100"></canvas>
 
-    <h3 id="fps"></h3>
+  <h3 id="fps"></h3>
 
-    <button onclick="capture_train_display()">Click me</button>
+  <button onclick="capture_train_display()">Click me</button>
 
-    <h2 id="angle"></h3>
+  <h2 id="angle">
+    </h3>
 
     <div id="pointData">
       <!-- Plotly chart will be drawn inside this DIV -->
     </div>
 
     <script src="app.1.js"></script>
-  </body>
+    <script>
+
+      var video = document.querySelector("#videoElement");
+      var videoFeed = new CanvasScreen('canvas', 160, 90)
+      var deltaFeed = new DeltaCanvas('canvas2', 160, 90)
+
+      deltaFeed.watchUpdate = function(){
+        deltaFeed.setImage(videoFeed.getGrayScaleImage())
+      }
+      videoFeed.addWatcher(deltaFeed)
+
+
+      function app() {
+        videoFeed.drawVideo(video)
+
+
+      }
+
+      setInterval(app, 1000 / 10);
+
+    </script>
+</body>
 
 </html>
