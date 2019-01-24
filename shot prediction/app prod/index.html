@@ -64,6 +64,7 @@
       var videoFeed
       var deltaFeed
       var trailFeed
+      var videoFeeding = true
 
       window.addEventListener('load', function () {
         console.log('All assets are loaded')
@@ -90,11 +91,34 @@
 
 
         function app() {
-          videoFeed.drawVideo(video)
+          if (videoFeeding) {
+            videoFeed.drawVideo(video)
+          }
         }
 
         setInterval(app, 1000 / 30);
       })
+
+
+      tf.loadModel('js_160/model.json').then((m) => {
+        model = m;
+        console.log('loaded model');
+
+        createTimeline();
+        start_frame_feeding();
+
+        setInterval(
+          function () {
+            var pixels = tf.fromPixels(canvas4, 1).toFloat().div(255);
+            var pred = model.predict(pixels.expandDims()).dataSync()[0];
+            if (pred > 0.8) {
+              de_bounce_predict();
+
+            }
+            // console.log(pred);
+            random.append(new Date().getTime(), pred)
+          }, 50)
+      });
 
 
 
