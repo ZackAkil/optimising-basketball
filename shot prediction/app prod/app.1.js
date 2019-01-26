@@ -72,8 +72,8 @@ class CanvasScreen extends Watcher {
     return image
   }
 
-  frame_data_to_data_points() {
-    var frame = getImage().data
+  getDataPoints() {
+    var frame = this.getImage().data
     var x = Array();
     var y = Array();
     var acutal_index = 0;
@@ -90,6 +90,29 @@ class CanvasScreen extends Watcher {
     }
     return { "x": x, "y": y }
   }
+
+  getCroppedDataPoints(fromX, fromY) {
+    var frame = this.getImage().data
+    var x = Array()
+    var y = Array()
+    var acutal_index = 0;
+
+    for (var i = 0; i < this.height; i++) {
+      for (var j = 0; j < this.width; j++) {
+        if (frame[acutal_index] == ACTIVE_PIXEL_VALUE) {
+          if ((j < fromX) & (i < fromY)) {
+            x.push(fromX - j);
+            y.push(fromY - i);
+          }
+        }
+        acutal_index += 4;
+      }
+    }
+
+    return { "x": x, "y": y }
+  }
+
+
 }
 
 class DeltaCanvas extends CanvasScreen {

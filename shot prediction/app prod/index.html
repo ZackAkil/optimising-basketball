@@ -138,14 +138,24 @@
         console.log('loaded model where');
       });
 
-      function predictWhere(pixels){
+      function predictWhere(pixels) {
 
-            var pred = whereModel.predict(pixels.expandDims()).dataSync()
-            // console.log(pred);
-            // draw_where(pred[0], pred[1]);
-            // x_crop = pred[0] * frame_width
-            // y_crop = pred[1] * frame_height
-            trailFeed.drawCross(pred[0], pred[1])
+        var pred = whereModel.predict(pixels.expandDims()).dataSync()
+        trailFeed.drawCross(pred[0], pred[1])
+      }
+
+      function displayCroppeedData(x=160, y=90) {
+        var data = trailFeed.getCroppedDataPoints(x, y)
+
+        data["type"] = "scatter"
+        data["mode"] = "markers"
+
+        var layout = {
+          xaxis: { range: [0, 160] },
+          yaxis: { range: [0, 90] }
+        };
+
+        Plotly.newPlot('pointData', [data], layout);
       }
 
 
