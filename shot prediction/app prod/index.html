@@ -45,6 +45,8 @@
     <canvas height=90px width=160px id="canvas5"></canvas>
   </div>
 
+  <h2 id="makingShot">Making shot</h2>
+
   <canvas id="chart" width="400" height="100"></canvas>
 
   <h3 id="fps"></h3>
@@ -82,7 +84,7 @@
         videoFeed.addWatcher(deltaFeed)
 
         // feed delta canvas into trail canvas
-        trailFeed = new TrailCanvas('canvas3', 160, 90, trailLength = 20)
+        trailFeed = new TrailCanvas('canvas3', 160, 90)
         trailFeed.watchUpdate = function () {
           trailFeed.addFrame(deltaFeed.getImage().data)
           trailFeed.displayCurrentTrailFrame()
@@ -99,28 +101,52 @@
         setInterval(app, 1000 / 30);
       })
 
+      const shotDeBounce = 2000
+      var isShotModel
 
       tf.loadModel('js_160/model.json').then((m) => {
-        model = m;
+        isShotModel = m;
         console.log('loaded model');
-
-        createTimeline();
-        start_frame_feeding();
-
-        setInterval(
-          function () {
-            var pixels = tf.fromPixels(canvas4, 1).toFloat().div(255);
-            var pred = model.predict(pixels.expandDims()).dataSync()[0];
-            if (pred > 0.8) {
-              de_bounce_predict();
-
-            }
-            // console.log(pred);
-            random.append(new Date().getTime(), pred)
-          }, 50)
       });
 
+      function predictIsShot() {
+        var pixels = tf.fromPixels(trailFeed.element, 1).toFloat().div(255)
+        var pred = isShotModel.predict(pixels.expandDims()).dataSync()[0]
+        if (pred > 0.8) {
+          shotMade(pixels)
+        } else {
+          document.getElementById("makingShot").style.display = "none"
+        }
+      }
 
+      var timeMadeShot = 0;
+
+      function shotMade(pixels) {
+        if ((Date.now() - timeMadeShot) > shotDeBounce) {
+          timeMadeShot = Date.now();
+          console.log("shot made")
+          document.getElementById("makingShot").style.display = "block"
+
+          predictWhere(pixels)
+        }
+
+      }
+
+      var whereModel
+      tf.loadModel('js_160_where/model.json').then((m) => {
+        whereModel = m;
+        console.log('loaded model where');
+      });
+
+      function predictWhere(pixels){
+
+            var pred = whereModel.predict(pixels.expandDims()).dataSync()
+            // console.log(pred);
+            // draw_where(pred[0], pred[1]);
+            // x_crop = pred[0] * frame_width
+            // y_crop = pred[1] * frame_height
+            trailFeed.drawCross(pred[0], pred[1])
+      }
 
 
     </script>
