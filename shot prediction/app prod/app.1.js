@@ -19,6 +19,7 @@ class Watcher {
   }
 }
 
+const ACTIVE_PIXEL_VALUE = 255
 
 class CanvasScreen extends Watcher {
   constructor(elementId, width, height) {
@@ -70,6 +71,25 @@ class CanvasScreen extends Watcher {
     }
     return image
   }
+
+  frame_data_to_data_points() {
+    var frame = getImage().data
+    var x = Array();
+    var y = Array();
+    var acutal_index = 0;
+    for (var i = 0; i < this.height; i++) {
+
+      for (var j = 0; j < this.width; j++) {
+
+        if (frame[acutal_index] == ACTIVE_PIXEL_VALUE) {
+          x.push(j);
+          y.push(i);
+        }
+        acutal_index += 4;
+      }
+    }
+    return { "x": x, "y": y }
+  }
 }
 
 class DeltaCanvas extends CanvasScreen {
@@ -80,7 +100,7 @@ class DeltaCanvas extends CanvasScreen {
     this.threshold = threshold
     this.deltaFrame = this.ctx.createImageData(this.width, this.height)
     for (var i = 0; i < this.deltaFrame.data.length; i++) {
-      this.deltaFrame.data[i] = 255
+      this.deltaFrame.data[i] = ACTIVE_PIXEL_VALUE
     }
   }
 
@@ -93,7 +113,7 @@ class DeltaCanvas extends CanvasScreen {
       for (var i = 0; i < frame.length; i += 4) {
         // cast to binary delta
         if (Math.abs(this.oldFrame[i] - frame[i]) > this.threshold) {
-          this.deltaFrame.data[i] = 255;
+          this.deltaFrame.data[i] = ACTIVE_PIXEL_VALUE;
         } else {
           this.deltaFrame.data[i] = 0;
         }
@@ -115,23 +135,23 @@ class TrailCanvas extends CanvasScreen {
   constructor(elementId, width, height, trailLength = 75) {
     super(elementId, width, height)
 
-   
+
     this.trailLength = trailLength
     this.trailFrames = new Array()
 
     this.trailFrame = new Array(4 * width * height)
-    for (var i = 0; i < this.trailFrame.length; i+= 4) {
+    for (var i = 0; i < this.trailFrame.length; i += 4) {
       this.trailFrame[i] = 0
-      this.trailFrame[i+1] = 0
-      this.trailFrame[i+2] = 0
+      this.trailFrame[i + 1] = 0
+      this.trailFrame[i + 2] = 0
     }
 
     this.trailImage = this.ctx.createImageData(this.width, this.height)
-    for (var i = 0; i < this.trailImage.data.length; i+= 4) {
-      this.trailImage.data[i] = 255
-      this.trailImage.data[i+1] = 255
-      this.trailImage.data[i+2] = 255
-      this.trailImage.data[i+3] = 255
+    for (var i = 0; i < this.trailImage.data.length; i += 4) {
+      this.trailImage.data[i] = ACTIVE_PIXEL_VALUE
+      this.trailImage.data[i + 1] = ACTIVE_PIXEL_VALUE
+      this.trailImage.data[i + 2] = ACTIVE_PIXEL_VALUE
+      this.trailImage.data[i + 3] = ACTIVE_PIXEL_VALUE
     }
   }
 
@@ -141,7 +161,7 @@ class TrailCanvas extends CanvasScreen {
       this.trailFrame[i] += frame[i]
       this.trailFrame[i + 1] = this.trailFrame[i]
       this.trailFrame[i + 2] = this.trailFrame[i]
-      this.trailFrame[i + 3] = 255
+      this.trailFrame[i + 3] = ACTIVE_PIXEL_VALUE
     }
 
     this.trailFrames.push(frame);
@@ -154,18 +174,18 @@ class TrailCanvas extends CanvasScreen {
         this.trailFrame[i] -= subtracter[i]
         this.trailFrame[i + 1] = this.trailFrame[i]
         this.trailFrame[i + 2] = this.trailFrame[i]
-        this.trailFrame[i + 3] = 255
+        this.trailFrame[i + 3] = ACTIVE_PIXEL_VALUE
       }
     }
   }
 
-  displayCurrentTrailFrame(){
+  displayCurrentTrailFrame() {
 
-    for (var i = 0; i < this.trailImage.data.length; i+=4) {
-      this.trailImage.data[i] = Math.min(255, this.trailFrame[i])
+    for (var i = 0; i < this.trailImage.data.length; i += 4) {
+      this.trailImage.data[i] = Math.min(ACTIVE_PIXEL_VALUE, this.trailFrame[i])
       this.trailImage.data[i + 1] = this.trailImage.data[i]
       this.trailImage.data[i + 2] = this.trailImage.data[i]
-      this.trailImage.data[i + 3] = 255
+      this.trailImage.data[i + 3] = ACTIVE_PIXEL_VALUE
     }
 
     this.setImage(this.trailImage)
