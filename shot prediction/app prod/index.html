@@ -102,7 +102,7 @@
 
       const angleModel = new TrajectoryFinder()
 
-      const shotDeBounce = 2000
+      const shotDeBounce = 6000
 
       const isShotModel = new TfJsModel('js_160/model.json')
 
@@ -152,9 +152,13 @@
 
         displayData(data)
 
-        // angleModel.train(
-        //   tf.tensor(data.x),
-        //   tf.tensor(data.y))
+        angleModel.train(
+          tf.tensor(data.x),
+          tf.tensor(data.y),
+          function(){
+            console.log('runnig callback');
+            displayDataAndModel(data, angleModel.getModelDataPoints());
+          })
       }
 
       function displayCroppeedData(x = 160, y = 90) {
@@ -174,6 +178,19 @@
         };
 
         Plotly.newPlot('pointData', [data], layout);
+      }
+
+      function displayDataAndModel(data, modelData) {
+
+        data["type"] = "scatter"
+        data["mode"] = "markers"
+
+        var layout = {
+          xaxis: { range: [0, 160] },
+          yaxis: { range: [0, 90] }
+        };
+
+        Plotly.newPlot('pointData', [data, modelData], layout);
       }
 
 

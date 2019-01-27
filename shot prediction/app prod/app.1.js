@@ -263,7 +263,7 @@ class TrajectoryFinder {
     return meanSquareError;
   }
 
-  train(xs, ys, numIterations = 1000) {
+  train(xs, ys, callbackOnFinish = null, numIterations = 1000) {
 
     const learningRate = 10;
     const optimizer = tf.train.adam(learningRate);
@@ -275,6 +275,11 @@ class TrajectoryFinder {
       });
     }
     console.log('finished triaing')
+
+    if (callbackOnFinish){
+      console.log('runnig callback inside')
+      callbackOnFinish()
+    }
   }
 
   getModelDataPoints(n = 150) {
