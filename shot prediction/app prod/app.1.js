@@ -91,24 +91,23 @@ class CanvasScreen extends Watcher {
     return { "x": x, "y": y }
   }
 
-  getCroppedDataPoints(fromX, fromY) {
-    var frame = this.getImage().data
+  cropDataPoints(data, fromX, fromY) {
     var x = Array()
     var y = Array()
-    var acutal_index = 0;
 
-    for (var i = 0; i < this.height; i++) {
-      for (var j = 0; j < this.width; j++) {
-        if (frame[acutal_index] == ACTIVE_PIXEL_VALUE) {
-          if ((j < fromX) & (i < fromY)) {
-            x.push(fromX - j);
-            y.push(fromY - i);
-          }
-        }
-        acutal_index += 4;
+    for (var i = 0; i < data.x.length; i++) {
+
+      if ((data.x[i] < fromX) & (data.y[i] < fromY)) {
+        x.push(fromX - data.x[i])
+        y.push(fromY - data.y[i])
       }
     }
+
     return { "x": x, "y": y }
+  }
+
+  getCroppedDataPoints(fromX, fromY) {
+    return this.cropDataPoints(this.getDataPoints(), fromX, fromY)
   }
 
 

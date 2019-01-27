@@ -97,7 +97,6 @@
             videoFeed.drawVideo(video)
           }
         }
-
         setInterval(app, 1000 / 30);
       })
 
@@ -143,18 +142,28 @@
       const whereModel = new TfJsModel('js_160_where/model.json')
 
       function predictWhere(pixels) {
-        var pred = whereModel.predict(pixels).dataSync()
-        trailFeed.drawCross(pred[0], pred[1])
+        var pred = whereModel.predict(pixels)
+
         var data = trailFeed.getCroppedDataPoints(
           parseInt(pred[0] * trailFeed.width),
-          parseInt(pred[1] * trailFeed.height))
-        angleModel.train(
-          tf.tensor(data.x),
-          tf.tensor(data.y))
+          parseInt(pred[1] * trailFeed.height)
+        )
+        trailFeed.drawCross(pred[0], pred[1])
+
+        displayData(data)
+
+        // angleModel.train(
+        //   tf.tensor(data.x),
+        //   tf.tensor(data.y))
       }
 
       function displayCroppeedData(x = 160, y = 90) {
         var data = trailFeed.getCroppedDataPoints(x, y)
+
+        displayData(data)
+      }
+
+      function displayData(data) {
 
         data["type"] = "scatter"
         data["mode"] = "markers"
