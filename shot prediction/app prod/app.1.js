@@ -108,7 +108,6 @@ class CanvasScreen extends Watcher {
         acutal_index += 4;
       }
     }
-
     return { "x": x, "y": y }
   }
 
@@ -212,5 +211,51 @@ class TrailCanvas extends CanvasScreen {
     }
 
     this.setImage(this.trailImage)
+  }
+}
+
+class TrajectoryFinder {
+
+  constructor() {
+    this.pi_on_180 = 0.017453292519943295
+    this.angle = tf.variable(tf.scalar(50));
+    this.power = tf.variable(tf.scalar(30));
+    this.y_trans = tf.variable(tf.scalar(0));
+  }
+
+  deg2rad(deg) {
+    return deg.mul(this.pi_on_180)
+  }
+
+  predict(x) {
+
+    return tf.tidy(() => {
+
+      var lhs = x.mul(tf.tan(this.deg2rad(this.angle)))
+      var rhs_top = (x.pow(2)).mul(9.81)
+      var rhs_bottom = ((this.power.pow(2)).mul(2)).mul(tf.cos(this.deg2rad(this.angle)).pow(2))
+
+      return (lhs.sub(rhs_top.div(rhs_bottom))).add(y_trans)
+    });
+  }
+
+  loss(predictions, labels) {
+    // Subtract our labels (actual values) from predictions, square the results,
+    // and take the mean.
+    const meanSquareError = predictions.sub(labels).square().mean();
+    return meanSquareError;
+  }
+
+  train(xs, ys, numIterations = 1000) {
+
+    const learningRate = 10;
+    const optimizer = tf.train.adam(learningRate);
+
+    for (let iter = 0; iter < numIterations; iter++) {
+      optimizer.minimize(() => {
+        const predsYs = this.predict(xs);
+        return this.loss(predsYs, ys);
+      });
+    }
   }
 }
