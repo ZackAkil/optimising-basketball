@@ -109,14 +109,25 @@
         console.log('loaded model');
       });
 
-      function predictIsShot() {
-        var pixels = tf.fromPixels(trailFeed.element, 1).toFloat().div(255)
-        var pred = isShotModel.predict(pixels.expandDims()).dataSync()[0]
-        if (pred > 0.8) {
-          shotMade(pixels)
-        } else {
-          document.getElementById("makingShot").style.display = "none"
+      var readyForNextPrediction = true
+
+      function predictionLoop() {
+
+        if (readyForNextPrediction) {
+          
+          var pixels = tf.fromPixels(trailFeed.element, 1).toFloat().div(255)
+          if (predictIsShot(pixels)) {
+            // readyForNextPrediction = false
+            shotMade(pixels)
+          }else{
+            document.getElementById("makingShot").style.display = "none"
+          }
         }
+      }
+
+
+      function predictIsShot(pixels, thresh=0.8) {
+        return isShotModel.predict(pixels.expandDims()).dataSync()[0] > thresh
       }
 
       var timeMadeShot = 0;
@@ -126,10 +137,8 @@
           timeMadeShot = Date.now();
           console.log("shot made")
           document.getElementById("makingShot").style.display = "block"
-
           predictWhere(pixels)
         }
-
       }
 
       var whereModel
@@ -139,12 +148,11 @@
       });
 
       function predictWhere(pixels) {
-
         var pred = whereModel.predict(pixels.expandDims()).dataSync()
         trailFeed.drawCross(pred[0], pred[1])
       }
 
-      function displayCroppeedData(x=160, y=90) {
+      function displayCroppeedData(x = 160, y = 90) {
         var data = trailFeed.getCroppedDataPoints(x, y)
 
         data["type"] = "scatter"
@@ -157,6 +165,13 @@
 
         Plotly.newPlot('pointData', [data], layout);
       }
+
+
+
+
+
+
+
 
 
     </script>

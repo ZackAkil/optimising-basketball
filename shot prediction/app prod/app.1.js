@@ -235,7 +235,7 @@ class TrajectoryFinder {
       var rhs_top = (x.pow(2)).mul(9.81)
       var rhs_bottom = ((this.power.pow(2)).mul(2)).mul(tf.cos(this.deg2rad(this.angle)).pow(2))
 
-      return (lhs.sub(rhs_top.div(rhs_bottom))).add(y_trans)
+      return (lhs.sub(rhs_top.div(rhs_bottom))).add(this.y_trans)
     });
   }
 
