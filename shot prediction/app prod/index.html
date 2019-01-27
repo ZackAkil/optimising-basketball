@@ -101,33 +101,32 @@
         setInterval(app, 1000 / 30);
       })
 
-      const shotDeBounce = 2000
-      var isShotModel
+      const angleModel = new TrajectoryFinder()
 
-      tf.loadModel('js_160/model.json').then((m) => {
-        isShotModel = m;
-        console.log('loaded model');
-      });
+      const shotDeBounce = 2000
+
+      const isShotModel = new TfJsModel('js_160/model.json')
+
 
       var readyForNextPrediction = true
 
       function predictionLoop() {
 
         if (readyForNextPrediction) {
-          
+
           var pixels = tf.fromPixels(trailFeed.element, 1).toFloat().div(255)
           if (predictIsShot(pixels)) {
             // readyForNextPrediction = false
             shotMade(pixels)
-          }else{
+          } else {
             document.getElementById("makingShot").style.display = "none"
           }
         }
       }
 
 
-      function predictIsShot(pixels, thresh=0.8) {
-        return isShotModel.predict(pixels.expandDims()).dataSync()[0] > thresh
+      function predictIsShot(pixels, thresh = 0.8) {
+        return isShotModel.predict(pixels)[0] > thresh
       }
 
       var timeMadeShot = 0;
@@ -141,15 +140,17 @@
         }
       }
 
-      var whereModel
-      tf.loadModel('js_160_where/model.json').then((m) => {
-        whereModel = m;
-        console.log('loaded model where');
-      });
+      const whereModel = new TfJsModel('js_160_where/model.json')
 
       function predictWhere(pixels) {
-        var pred = whereModel.predict(pixels.expandDims()).dataSync()
+        var pred = whereModel.predict(pixels).dataSync()
         trailFeed.drawCross(pred[0], pred[1])
+        var data = trailFeed.getCroppedDataPoints(
+          parseInt(pred[0] * trailFeed.width),
+          parseInt(pred[1] * trailFeed.height))
+        angleModel.train(
+          tf.tensor(data.x),
+          tf.tensor(data.y))
       }
 
       function displayCroppeedData(x = 160, y = 90) {

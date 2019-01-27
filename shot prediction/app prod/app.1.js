@@ -214,6 +214,24 @@ class TrailCanvas extends CanvasScreen {
   }
 }
 
+
+class TfJsModel {
+  constructor(fileName, callbackOnLoad = null) {
+    tf.loadModel(fileName).then((model) => {
+      this.model = model
+      console.log('loaded model')
+      if (callbackOnLoad) {
+        callbackOnLoad()
+      }
+    });
+  }
+
+  predict(x) {
+    return this.model.predict(x.expandDims()).dataSync()
+  }
+}
+
+
 class TrajectoryFinder {
 
   constructor() {
@@ -257,5 +275,16 @@ class TrajectoryFinder {
         return this.loss(predsYs, ys);
       });
     }
+    console.log('finished triaing')
+  }
+
+  getModelDataPoints(n = 150) {
+    var x = Array()
+    for (var i = 0; i < n; i++) {
+      x.push(i)
+    }
+
+    var y = this.predict(tf.tensor(x)).dataSync()
+    return { "x": x, "y": y }
   }
 }
