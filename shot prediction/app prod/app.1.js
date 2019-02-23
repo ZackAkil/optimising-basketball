@@ -235,8 +235,8 @@ class TrajectoryFinder {
 
   constructor() {
     this.pi_on_180 = 0.017453292519943295
-    this.angle = tf.variable(tf.scalar(50));
-    this.power = tf.variable(tf.scalar(30));
+    this.angle = tf.variable(tf.scalar(55));
+    this.power = tf.variable(tf.scalar(55));
     this.y_trans = tf.variable(tf.scalar(0));
   }
 
@@ -263,9 +263,9 @@ class TrajectoryFinder {
     return meanSquareError;
   }
 
-  train(xs, ys, callbackOnFinish = null, numIterations = 1000) {
+  train(xs, ys, callbackOnFinish = null, numIterations = 300) {
 
-    const learningRate = 10;
+    const learningRate = 5;
     const optimizer = tf.train.adam(learningRate);
 
     for (let iter = 0; iter < numIterations; iter++) {
