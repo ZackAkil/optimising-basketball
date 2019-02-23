@@ -53,6 +53,7 @@
 
   <button onclick="capture_train_display()">Click me</button>
 
+
   <h2 id="angle">
     </h3>
 
@@ -150,13 +151,18 @@
         )
         trailFeed.drawCross(pred[0], pred[1])
 
-        displayData(data)
+        console.log(angleModel.angle.dataSync())
+        document.getElementById("angle").innerHTML =  angleModel.angle.dataSync()
 
         angleModel.train(
           tf.tensor(data.x),
           tf.tensor(data.y),
           function(){
             console.log('runnig callback');
+
+            angle
+
+
             displayDataAndModel(data, angleModel.getModelDataPoints());
           })
       }
