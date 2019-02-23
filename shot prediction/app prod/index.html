@@ -54,8 +54,8 @@
   <button onclick="capture_train_display()">Click me</button>
 
 
-  <h2 id="angle">
-    </h3>
+  <h2 id="angle"></h2>
+  <h2 id="power"></h2>
 
     <div id="pointData">
       <!-- Plotly chart will be drawn inside this DIV -->
@@ -152,7 +152,8 @@
         trailFeed.drawCross(pred[0], pred[1])
 
         console.log(angleModel.angle.dataSync())
-        document.getElementById("angle").innerHTML =  angleModel.angle.dataSync()
+        document.getElementById("angle").innerHTML =  angleModel.angle.dataSync() 
+        document.getElementById("power").innerHTML =  angleModel.power.dataSync() 
 
         angleModel.train(
           tf.tensor(data.x),
