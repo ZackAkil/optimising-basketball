@@ -263,10 +263,10 @@ class TrajectoryFinder {
     return meanSquareError;
   }
 
-  train(xs, ys, callbackOnFinish = null, numIterations = 300) {
+  train(xs, ys, callbackOnFinish = null, numIterations = 100) {
 
-    const learningRate = 5;
-    const optimizer = tf.train.adam(learningRate);
+    const learningRate = 0.001;
+    const optimizer = tf.train.SGDOptimizer(learningRate);
 
     for (let iter = 0; iter < numIterations; iter++) {
       optimizer.minimize(() => {
