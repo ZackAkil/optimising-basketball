@@ -266,7 +266,7 @@ class TrajectoryFinder {
   train(xs, ys, callbackOnFinish = null, numIterations = 100) {
 
     const learningRate = 0.001;
-    const optimizer = tf.train.SGDOptimizer(learningRate);
+    const optimizer = tf.train.sgd(learningRate);
 
     for (let iter = 0; iter < numIterations; iter++) {
       optimizer.minimize(() => {
