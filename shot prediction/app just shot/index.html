@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <style>
+    #container {
+      margin: 15px auto;
+    }
+
+    #videoElement {
+      width: 160px;
+      height: 90px;
+      background-color: #666;
+    }
+
+    canvas {
+      width: 160px;
+      height: 90px;
+      background-color: #666;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rickshaw/1.6.3/rickshaw.min.css">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.2.0/d3.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/rickshaw/1.6.5/rickshaw.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.5"> </script>
+  <script src="smoothie.js"> </script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+
+
+
+<body>
+  <div id="container">
+
+    <video autoplay="true" id="videoElement" controls>
+      <source src="output_320_full.mp4" type="video/mp4">
+    </video>
+
+    <canvas height=90px width=160px id="canvas"></canvas>
+    <canvas height=90px width=160px id="canvas2"></canvas>
+    <canvas height=90px width=160px id="canvas3"></canvas>
+
+  </div>
+
+
+
+  <div id="chart_container">
+    <div id="chart"></div>
+  </div>
+
+  <h3 id="fps"></h3>
+
+
+
+  <script src="app.1.js"></script>
+  <script>
+    var video
+    var videoFeed
+    var deltaFeed
+    var trailFeed
+    var videoFeeding = true
+
+    window.addEventListener('load', function () {
+      console.log('All assets are loaded')
+
+
+
+      // feed video into first canvas
+      video = document.querySelector("#videoElement");
+
+      // if (navigator.mediaDevices.getUserMedia) {
+      //   navigator.mediaDevices.getUserMedia({ video: true })
+      //     .then(function (stream) {
+      //       video.srcObject = stream;
+      //     })
+      //     .catch(function (err0r) {
+      //       console.log("Something went wrong!");
+      //     });
+      // }
+
+      videoFeed = new CanvasScreen('canvas', 160, 90)
+
+      // feed grayscale of first canvas into delta canvas
+      deltaFeed = new DeltaCanvas('canvas2', 160, 90)
+      deltaFeed.watchUpdate = function () {
+        deltaFeed.addFrame(videoFeed.getGrayScaleImage().data)
+        deltaFeed.displayCurrentDelta()
+      }
+      videoFeed.addWatcher(deltaFeed)
+
+      // feed delta canvas into trail canvas
+      trailFeed = new TrailCanvas('canvas3', 160, 90)
+      trailFeed.watchUpdate = function () {
+        trailFeed.addFrame(deltaFeed.getImage().data)
+        trailFeed.displayCurrentTrailFrame()
+      }
+      deltaFeed.addWatcher(trailFeed)
+
+
+      function app() {
+        if (videoFeeding) {
+          videoFeed.drawVideo(video)
+        }
+      }
+      setInterval(app, 1000 / 30);
+    })
+
+
+    const shotDeBounce = 6000
+
+    const isShotModel = new TfJsModel('js_160/model.json')
+
+
+    var readyForNextPrediction = true
+
+    function predictionLoop() {
+
+      if (readyForNextPrediction) {
+
+        var pixels = tf.fromPixels(trailFeed.element, 1).toFloat().div(255)
+        if (predictIsShot(pixels)) {
+          // readyForNextPrediction = false
+          shotMade(pixels)
+        } else {
+
+        }
+      }
+    }
+
+
+    function predictIsShot(pixels, thresh = 0.8) {
+      var prediction = isShotModel.predict(pixels)[0]
+      let tmpData = {
+        one: prediction
+      };
+
+      chart2.series.addData(tmpData);
+      chart2.render();
+
+
+      return prediction > thresh
+    }
+
+    var timeMadeShot = 0;
+
+    function shotMade(pixels) {
+      if ((Date.now() - timeMadeShot) > shotDeBounce) {
+        timeMadeShot = Date.now();
+        console.log("shot made")
+
+      }
+    }
+
+
+
+
+
+
+
+
+
+    setTimeout(function () { setInterval(predictionLoop, 1000 / 30); }, 5000)
+
+
+
+    var updateInterval = 1000 / 30;
+
+    /* Rickshaw.js initialization */
+    var chart2 = new Rickshaw.Graph({
+      element: document.querySelector("#chart"),
+      width: "300",
+      height: "150",
+      renderer: "line",
+      min: "0",
+      max: "1",
+      series: new Rickshaw.Series.FixedDuration([{
+        name: 'one',
+        color: '#446CB3'
+      }], undefined, {
+          timeInterval: updateInterval,
+          maxDataPoints: 100
+        })
+    });
+
+
+
+
+
+
+  </script>
+</body>
+
+</html>

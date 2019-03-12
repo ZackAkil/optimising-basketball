@@ -1,0 +1,434 @@
+const pi_on_180 = 0.017453292519943295
+function deg2rad(deg) {
+  return deg.mul(pi_on_180)
+}
+
+const angle = tf.variable(tf.scalar(50));
+const power = tf.variable(tf.scalar(30));
+const y_trans = tf.variable(tf.scalar(0));
+
+function predict(x) {
+
+  return tf.tidy(() => {
+
+    var lhs = x.mul(tf.tan(deg2rad(angle)))
+    var rhs_top = (x.pow(2)).mul(9.81)
+    var rhs_bottom = ((power.pow(2)).mul(2)).mul(tf.cos(deg2rad(angle)).pow(2))
+
+    return (lhs.sub(rhs_top.div(rhs_bottom))).add(y_trans)
+  });
+}
+
+function loss(predictions, labels) {
+  // Subtract our labels (actual values) from predictions, square the results,
+  // and take the mean.
+  const meanSquareError = predictions.sub(labels).square().mean();
+  return meanSquareError;
+}
+
+function train(xs, ys, numIterations = 1000) {
+
+  const learningRate = 10;
+  const optimizer = tf.train.adam(learningRate);
+
+  for (let iter = 0; iter < numIterations; iter++) {
+    optimizer.minimize(() => {
+      const predsYs = predict(xs);
+      return loss(predsYs, ys);
+    });
+  }
+}
+
+function get_model_state_datat_points(n = 150) {
+
+  var x = Array()
+
+  for (var i = 0; i < n; i++) {
+    x.push(i)
+  }
+
+  var y = predict(tf.tensor(x)).dataSync()
+
+  return { "x": x, "y": y }
+
+}
+
+function display_model() {
+
+
+  var data_points = get_model_state_datat_points()
+
+  // data_points["type"] = "scatter"
+  // data_points["mode"] = "markers"
+
+  var layout = {
+    xaxis: { range: [0, frame_width] },
+    yaxis: { range: [0, frame_height] }
+  };
+
+  Plotly.newPlot('pointData', [data_points], layout);
+}
+
+function capture_train_display() {
+
+  var data = capture_trail_as_points()
+  train(tf.tensor(data.x), tf.tensor(data.y))
+
+  var model_data = get_model_state_datat_points()
+
+
+  data["type"] = "scatter"
+  data["mode"] = "markers"
+
+  var layout = {
+    xaxis: { range: [0, frame_width] },
+    yaxis: { range: [0, frame_height] }
+  };
+
+  Plotly.newPlot('pointData', [data, model_data], layout);
+
+  document.getElementById("angle").innerHTML = angle.dataSync()[0].toString();
+
+
+}
+
+
+
+
+var random = new TimeSeries();
+
+var model;
+
+tf.loadModel('js_160/model.json').then((m) => {
+  model = m;
+  console.log('loaded model');
+
+  createTimeline();
+  start_frame_feeding();
+
+  setInterval(
+    function () {
+      var pixels = tf.fromPixels(canvas4, 1).toFloat().div(255);
+      var pred = model.predict(pixels.expandDims()).dataSync()[0];
+      if (pred >0.8){
+        de_bounce_predict();
+
+      }
+      // console.log(pred);
+      random.append(new Date().getTime(), pred)
+    }, 50)
+});
+
+var time_since_last_predict = Date.now();
+
+function de_bounce_predict(){
+  if ((Date.now() - time_since_last_predict) > 5000){
+    time_since_last_predict = Date.now();
+    capture_train_display();
+  }
+
+                
+
+}
+
+
+var model_where;
+
+var x_crop = 0
+var y_crop = 0
+
+tf.loadModel('js_160_where/model.json').then((m) => {
+  model_where = m;
+  console.log('loaded model where');
+
+  setInterval(
+    function () {
+      var pixels = tf.fromPixels(canvas4, 1).toFloat().div(255);
+      var pred = model_where.predict(pixels.expandDims()).dataSync();
+      // console.log(pred);
+      draw_where(pred[0], pred[1]);
+      x_crop = pred[0] * frame_width
+      y_crop = pred[1] * frame_height
+    }, 100)
+});
+
+
+
+var canvas5 = document.querySelector("#canvas5");
+var ctx5 = canvas5.getContext('2d');
+
+function draw_where(x, y) {
+  ctx5.putImageData(trail_frame_image, 0, 0);
+  ctx5.beginPath();
+  ctx5.moveTo(x * frame_width, 0);
+  ctx5.lineTo(x * frame_width, frame_height);
+  ctx5.moveTo(0, y * frame_height);
+  ctx5.lineTo(frame_width, y * frame_height);
+
+  ctx5.strokeStyle = "red";
+  ctx5.lineWidth = 5;
+  ctx5.stroke();
+}
+
+
+
+function createTimeline() {
+  var chart = new SmoothieChart({ minValue: 0, maxValue: 1 });
+  chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
+  chart.streamTo(document.getElementById("chart"), 500);
+}
+
+function frame_data_to_data_points(frame, width, height) {
+
+  var x = Array();
+  var y = Array();
+  var acutal_index = 0;
+  for (var i = 0; i < height; i++) {
+
+    for (var j = 0; j < width; j++) {
+
+      if (frame[acutal_index] > 10) {
+        x.push(j);
+        y.push(i);
+      }
+
+      acutal_index += 4;
+    }
+  }
+  return { "x": x, "y": y }
+}
+
+
+
+function display_data_points_to_graph(data_points) {
+
+  data_points["type"] = "scatter"
+  data_points["mode"] = "markers"
+
+  var layout = {
+    xaxis: { range: [0, frame_width] },
+    yaxis: { range: [0, frame_height] }
+  };
+
+  Plotly.newPlot('pointData', [data_points], layout);
+}
+
+function capture_trail_as_points() {
+
+  var data_points = frame_data_to_data_points(trail_frame_image.data, frame_width, frame_height)
+  data_points = crop_data_points(data_points, x_crop, y_crop)
+  data_points = translate_data_points_to_origin(data_points, x_crop, y_crop)
+  return data_points
+}
+
+function displaye_trail_as_points() {
+
+
+  var data_points = frame_data_to_data_points(trail_frame_image.data, frame_width, frame_height)
+  data_points = crop_data_points(data_points, x_crop, y_crop)
+  data_points = translate_data_points_to_origin(data_points, x_crop, y_crop)
+  display_data_points_to_graph(data_points)
+}
+
+
+
+function crop_data_points(data, x_from, y_from) {
+  var x = Array()
+  var y = Array()
+
+  for (var i = 0; i < data.x.length; i++) {
+
+    if ((data.x[i] < x_from) & (data.y[i] < y_from)) {
+      x.push(data.x[i])
+      y.push(data.y[i])
+    }
+  }
+
+  return { "x": x, "y": y }
+}
+
+function translate_data_points_to_origin(data, x_from, y_from) {
+
+  var x = Array()
+  var y = Array()
+
+  for (var i = 0; i < data.x.length; i++) {
+    x.push(x_from - data.x[i])
+    y.push(y_from - data.y[i])
+  }
+
+  return { "x": x, "y": y }
+}
+
+
+
+var video = document.querySelector("#videoElement");
+
+
+
+var canvas = document.querySelector("#canvas");
+var ctx = canvas.getContext('2d');
+
+var canvas2 = document.querySelector("#canvas2");
+var ctx2 = canvas2.getContext('2d');
+
+var canvas3 = document.querySelector("#canvas3");
+var ctx3 = canvas3.getContext('2d');
+
+var canvas4 = document.querySelector("#canvas4");
+var ctx4 = canvas4.getContext('2d');
+
+
+
+var current_frame, prev_frame;
+
+const trail_window = 75;
+
+var delta_frames = new Array();
+
+const frame_height = 90;
+const frame_width = 160;
+
+const frame_size = frame_width * frame_height * 4;
+
+var image;
+//  var canvas_stream = canvas.captureStream(25); // 25 FPS
+
+function gray_scale_image(image_data) {
+  var data = image_data.data;
+
+  for (var i = 0; i < data.length; i += 4) {
+    // grayscale by isolating the red channel
+    data[i + 1] = data[i]; // green
+    data[i + 2] = data[i]; // blue
+  }
+  return image_data;
+}
+
+var trail_frame = Array(frame_size);
+for (var i = 0; i < trail_frame.length; i++) {
+  trail_frame[i] = 0;
+}
+
+function delta_frame_contcat(frame) {
+
+  var data = frame.data;
+
+
+
+  for (var i = 0; i < data.length; i += 4) {
+    trail_frame[i] += data[i]
+    trail_frame[i + 1] = trail_frame[i]
+    trail_frame[i + 2] = trail_frame[i]
+    trail_frame[i + 3] = 255
+  }
+
+  delta_frames.push(frame.data.slice());
+
+
+  if (delta_frames.length > trail_window) {
+    var subtracter = delta_frames.shift();
+
+    for (var i = 0; i < data.length; i += 4) {
+      trail_frame[i] -= subtracter[i]
+      trail_frame[i + 1] = trail_frame[i]
+      trail_frame[i + 2] = trail_frame[i]
+      trail_frame[i + 3] = 255
+    }
+
+  }
+
+  frame.data = trail_frame;
+
+
+
+  return frame;
+}
+
+function delta_frame(current_image) {
+  if (!prev_frame) {
+    prev_frame = current_image.data;
+    return current_image;
+  }
+
+  var old_data = current_image.data.slice();
+  var data = current_image.data;
+
+  for (var i = 0; i < data.length; i += 4) {
+    // grayscale by isolating the red channel
+    if (Math.abs(prev_frame[i] - data[i]) > 20) {
+      data[i] = 255;
+    } else {
+      data[i] = 0;
+    }
+    // data[i] = Math.abs(prev_frame[i] - data[i]);
+    data[i + 1] = data[i]; // green
+    data[i + 2] = data[i]; // blue
+  }
+  prev_frame = old_data;
+
+
+  return current_image
+
+}
+
+
+var trail_frame_image;
+
+var fps;
+
+const times = [];
+
+
+function cal_fps() {
+  window.requestAnimationFrame(() => {
+    const now = performance.now();
+    while (times.length > 0 && times[0] <= now - 1000) {
+      times.shift();
+    }
+    times.push(now);
+    fps = times.length;
+    // refreshLoop();
+  });
+}
+
+function start_frame_feeding() {
+  setInterval(
+    function () {
+      ctx.drawImage(video, 0, 0, frame_width, frame_height);
+
+      image = ctx.getImageData(0, 0, frame_width, frame_height);
+      var gray_image = gray_scale_image(image);
+      ctx2.putImageData(gray_image, 0, 0);
+
+      var delta_image_data = delta_frame(image)
+      ctx3.putImageData(delta_image_data, 0, 0);
+
+      var trail = delta_frame_contcat(delta_image_data)
+
+      var new_image = ctx4.createImageData(frame_width, frame_height);
+      var data = new Uint8ClampedArray(trail_frame);
+      for (var i = 0; i < data.length; i++) {
+        new_image.data[i] = data[i];
+      }
+      trail_frame_image = new_image;
+      ctx4.putImageData(new_image, 0, 0);
+
+      cal_fps();
+
+      // document.getElementById("fps").innerHTML = requestAnimFrame().toString()
+
+    }, 1000 / 70);
+}
+
+setInterval(
+  function () {
+
+    document.getElementById("fps").innerHTML = fps.toString();
+
+  }, 1000 / 10);
+
+
+
+
+
