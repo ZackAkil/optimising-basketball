@@ -51,8 +51,13 @@
 
 
   <div id="chart_container">
-    <div id="chart"></div>
+    <div id="chart" style="display:inline-block"></div>
   </div>
+
+  <form>
+    <input type="radio" name="feed" value="cam"> Camera<br>
+    <input type="radio" name="feed" value="vid" checked="checked"> Video<br>
+  </form>
 
   <h3 id="fps"></h3>
 
@@ -66,6 +71,28 @@
     var trailFeed
     var videoFeeding = true
 
+
+function enableCamera(){
+
+        if (navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function (stream) {
+            video.srcObject = stream;
+          })
+          .catch(function (err0r) {
+            console.log("Something went wrong!");
+          });
+      }
+}
+
+function enableVid(){
+
+
+    video.srcObject = null;
+
+}
+
+
     window.addEventListener('load', function () {
       console.log('All assets are loaded')
 
@@ -74,15 +101,7 @@
       // feed video into first canvas
       video = document.querySelector("#videoElement");
 
-      // if (navigator.mediaDevices.getUserMedia) {
-      //   navigator.mediaDevices.getUserMedia({ video: true })
-      //     .then(function (stream) {
-      //       video.srcObject = stream;
-      //     })
-      //     .catch(function (err0r) {
-      //       console.log("Something went wrong!");
-      //     });
-      // }
+
 
       videoFeed = new CanvasScreen('canvas', 160, 90)
 
@@ -189,6 +208,14 @@
     });
 
 
+    $('input[type=radio][name=feed]').change(function () {
+      if (this.value == 'vid') {
+        enableVid()
+      }
+      else if (this.value == 'cam') {
+        enableCamera()
+      }
+    });
 
 
 
