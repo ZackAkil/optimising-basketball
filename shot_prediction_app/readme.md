@@ -1,7 +1,11 @@
 
-https://zackakil.github.io/optimising-basketball/shot%20prediction/app/
+[Prototype App](https://zackakil.github.io/optimising-basketball/shot_prediction_app/app_prototype/)
 
-https://zackakil.github.io/optimising-basketball/shot%20prediction/app%20prod/
+[Just Shot App](https://zackakil.github.io/optimising-basketball/shot_prediction_app/app_just_shot/)
+
+[Full App](https://zackakil.github.io/optimising-basketball/shot_prediction_app/app_full/)
+
+
 
 https://colab.research.google.com/github/ZackAkil/mnist-draw/blob/master/Keras_to_Tensorflow_js_for_MNIST.ipynb
 
