@@ -52,6 +52,20 @@
 
   <div id="chart_container">
     <div id="chart" style="display:inline-block"></div>
+
+    <div
+      style="display:inline-block;vertical-align: top;/* height: -webkit-fill-available; */border-left: black solid;padding-left: 10px;">
+      <h3 style="margin-bottom: 70px;">
+        Shooting
+      </h3>
+      <h3>
+
+        Not Shooting
+      </h3>
+
+    </div>
+
+
   </div>
 
   <form>
@@ -72,9 +86,9 @@
     var videoFeeding = true
 
 
-function enableCamera(){
+    function enableCamera() {
 
-        if (navigator.mediaDevices.getUserMedia) {
+      if (navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: true })
           .then(function (stream) {
             video.srcObject = stream;
@@ -83,14 +97,14 @@ function enableCamera(){
             console.log("Something went wrong!");
           });
       }
-}
+    }
 
-function enableVid(){
+    function enableVid() {
 
 
-    video.srcObject = null;
+      video.srcObject = null;
 
-}
+    }
 
 
     window.addEventListener('load', function () {
