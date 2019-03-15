@@ -11,7 +11,7 @@
   <style>
     #container {
       margin: 0px auto;
-      border: 10px #333 solid;
+      /* border: 10px #333 solid; */
     }
 
     #videoElement {
@@ -26,6 +26,7 @@
       background-color: #666;
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.5"> </script>
   <script src="smoothie.js"> </script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -41,174 +42,214 @@
     <canvas height=90px width=160px id="canvas"></canvas>
     <canvas height=90px width=160px id="canvas2"></canvas>
     <canvas height=90px width=160px id="canvas3"></canvas>
-    <canvas height=90px width=160px id="canvas4"></canvas>
-    <canvas height=90px width=160px id="canvas5"></canvas>
+    <!-- <canvas height=90px width=160px id="canvas4"></canvas>
+    <canvas height=90px width=160px id="canvas5"></canvas> -->
   </div>
 
-  <h2 id="makingShot">Making shot</h2>
+  <input id="run-angle-model" type="checkbox" name="run-angle-model" value="yes"> Run angle model for shot
+  <br>
+  <form>
+    <input type="radio" name="feed" value="cam"> Camera<br>
+    <input type="radio" name="feed" value="vid" checked="checked"> Video<br>
+  </form>
 
-  <canvas id="chart" width="400" height="100"></canvas>
+  <!-- <h2 id="makingShot">Making shot</h2> -->
+
+  <!-- <canvas id="chart" width="400" height="100"></canvas> -->
 
   <h3 id="fps"></h3>
 
-  <button onclick="capture_train_display()">Click me</button>
+  <!-- <button onclick="capture_train_display()">Click me</button> -->
 
 
   <h2 id="angle"></h2>
-  <h2 id="power"></h2>
+  <h2 id="power" style="display:none;"></h2>
 
-    <div id="pointData">
-      <!-- Plotly chart will be drawn inside this DIV -->
-    </div>
+  <div id="pointData">
+    <!-- Plotly chart will be drawn inside this DIV -->
+  </div>
 
-    <script src="app.1.js"></script>
-    <script>
-      var video
-      var videoFeed
-      var deltaFeed
-      var trailFeed
-      var videoFeeding = true
+  <script src="app.1.js"></script>
+  <script>
+    var video
+    var videoFeed
+    var deltaFeed
+    var trailFeed
+    var videoFeeding = true
 
-      window.addEventListener('load', function () {
-        console.log('All assets are loaded')
+    function enableCamera() {
 
-        // feed video into first canvas
-        video = document.querySelector("#videoElement");
-        videoFeed = new CanvasScreen('canvas', 160, 90)
+      if (navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function (stream) {
+            video.srcObject = stream;
+          })
+          .catch(function (err0r) {
+            console.log("Something went wrong!");
+          });
+      }
+    }
 
-        // feed grayscale of first canvas into delta canvas
-        deltaFeed = new DeltaCanvas('canvas2', 160, 90)
-        deltaFeed.watchUpdate = function () {
-          deltaFeed.addFrame(videoFeed.getGrayScaleImage().data)
-          deltaFeed.displayCurrentDelta()
-        }
-        videoFeed.addWatcher(deltaFeed)
+    function enableVid() {
 
-        // feed delta canvas into trail canvas
-        trailFeed = new TrailCanvas('canvas3', 160, 90)
-        trailFeed.watchUpdate = function () {
-          trailFeed.addFrame(deltaFeed.getImage().data)
-          trailFeed.displayCurrentTrailFrame()
-        }
-        deltaFeed.addWatcher(trailFeed)
+      video.srcObject = null;
 
+    }
 
-        function app() {
-          if (videoFeeding) {
-            videoFeed.drawVideo(video)
-          }
-        }
-        setInterval(app, 1000 / 30);
-      })
+    window.addEventListener('load', function () {
+      console.log('All assets are loaded')
 
-      const angleModel = new TrajectoryFinder()
+      // feed video into first canvas
+      video = document.querySelector("#videoElement");
+      videoFeed = new CanvasScreen('canvas', 160, 90)
 
-      const shotDeBounce = 6000
+      // feed grayscale of first canvas into delta canvas
+      deltaFeed = new DeltaCanvas('canvas2', 160, 90)
+      deltaFeed.watchUpdate = function () {
+        deltaFeed.addFrame(videoFeed.getGrayScaleImage().data)
+        deltaFeed.displayCurrentDelta()
+      }
+      videoFeed.addWatcher(deltaFeed)
 
-      const isShotModel = new TfJsModel('js_160/model.json')
+      // feed delta canvas into trail canvas
+      trailFeed = new TrailCanvas('canvas3', 160, 90)
+      trailFeed.watchUpdate = function () {
+        trailFeed.addFrame(deltaFeed.getImage().data)
+        trailFeed.displayCurrentTrailFrame()
+      }
+      deltaFeed.addWatcher(trailFeed)
 
 
-      var readyForNextPrediction = true
-
-      function predictionLoop() {
-
-        if (readyForNextPrediction) {
-
-          var pixels = tf.fromPixels(trailFeed.element, 1).toFloat().div(255)
-          if (predictIsShot(pixels)) {
-            // readyForNextPrediction = false
-            shotMade(pixels)
-          } else {
-            document.getElementById("makingShot").style.display = "none"
-          }
+      function app() {
+        if (videoFeeding) {
+          videoFeed.drawVideo(video)
         }
       }
+      setInterval(app, 1000 / 30);
+    })
+
+    const angleModel = new TrajectoryFinder()
+
+    const shotDeBounce = 6000
+
+    const isShotModel = new TfJsModel('js_160/model.json')
 
 
-      function predictIsShot(pixels, thresh = 0.8) {
-        return isShotModel.predict(pixels)[0] > thresh
-      }
+    var readyForNextPrediction = true
 
-      var timeMadeShot = 0;
+    function predictionLoop() {
 
-      function shotMade(pixels) {
-        if ((Date.now() - timeMadeShot) > shotDeBounce) {
-          timeMadeShot = Date.now();
-          console.log("shot made")
-          document.getElementById("makingShot").style.display = "block"
-          predictWhere(pixels)
+      if (readyForNextPrediction) {
+
+        var pixels = tf.fromPixels(trailFeed.element, 1).toFloat().div(255)
+        if (predictIsShot(pixels)) {
+          // readyForNextPrediction = false
+          shotMade(pixels)
+        } else {
+          // document.getElementById("makingShot").style.display = "none"
         }
       }
+    }
 
-      const whereModel = new TfJsModel('js_160_where/model.json')
 
-      function predictWhere(pixels) {
-        var pred = whereModel.predict(pixels)
+    function predictIsShot(pixels, thresh = 0.8) {
+      return isShotModel.predict(pixels)[0] > thresh
+    }
 
-        var data = trailFeed.getCroppedDataPoints(
-          parseInt(pred[0] * trailFeed.width),
-          parseInt(pred[1] * trailFeed.height)
-        )
-        trailFeed.drawCross(pred[0], pred[1])
+    var timeMadeShot = 0;
 
-        console.log(angleModel.angle.dataSync())
-        document.getElementById("angle").innerHTML =  angleModel.angle.dataSync() 
-        document.getElementById("power").innerHTML =  angleModel.power.dataSync() 
+    function shotMade(pixels) {
+      if ((Date.now() - timeMadeShot) > shotDeBounce) {
+        timeMadeShot = Date.now();
+        console.log("shot made")
+        // document.getElementById("makingShot").style.display = "block"
+        predictWhere(pixels)
+      }
+    }
+
+    const whereModel = new TfJsModel('js_160_where/model.json')
+
+    function predictWhere(pixels) {
+      var pred = whereModel.predict(pixels)
+
+      var data = trailFeed.getCroppedDataPoints(
+        parseInt(pred[0] * trailFeed.width),
+        parseInt(pred[1] * trailFeed.height)
+      )
+      trailFeed.drawCross(pred[0], pred[1])
+
+
+      if (document.getElementById("run-angle-model").checked) {
+
 
         angleModel.train(
           tf.tensor(data.x),
           tf.tensor(data.y),
-          function(){
+          function () {
             console.log('runnig callback');
+            console.log(angleModel.angle.dataSync());
 
-            angle
+            // angle
+            document.getElementById("angle").innerHTML = angleModel.angle.dataSync()
+            document.getElementById("power").innerHTML = angleModel.power.dataSync()
 
 
             displayDataAndModel(data, angleModel.getModelDataPoints());
           })
+
+      } else {
+        displayData(data);
       }
+    }
 
-      function displayCroppeedData(x = 160, y = 90) {
-        var data = trailFeed.getCroppedDataPoints(x, y)
+    function displayCroppeedData(x = 160, y = 90) {
+      var data = trailFeed.getCroppedDataPoints(x, y)
 
-        displayData(data)
+      displayData(data)
+    }
+
+    function displayData(data) {
+
+      data["type"] = "scatter"
+      data["mode"] = "markers"
+
+      var layout = {
+        xaxis: { range: [0, 160] },
+        yaxis: { range: [0, 90] }
+      };
+
+      Plotly.newPlot('pointData', [data], layout);
+    }
+
+    function displayDataAndModel(data, modelData) {
+
+      data["type"] = "scatter"
+      data["mode"] = "markers"
+
+      var layout = {
+        xaxis: { range: [0, 160] },
+        yaxis: { range: [0, 90] }
+      };
+
+      Plotly.newPlot('pointData', [data, modelData], layout);
+    }
+
+
+
+
+
+    setTimeout(function () { setInterval(predictionLoop, 1000 / 30); }, 5000)
+
+    $('input[type=radio][name=feed]').change(function () {
+      if (this.value == 'vid') {
+        enableVid()
       }
-
-      function displayData(data) {
-
-        data["type"] = "scatter"
-        data["mode"] = "markers"
-
-        var layout = {
-          xaxis: { range: [0, 160] },
-          yaxis: { range: [0, 90] }
-        };
-
-        Plotly.newPlot('pointData', [data], layout);
+      else if (this.value == 'cam') {
+        enableCamera()
       }
+    });
 
-      function displayDataAndModel(data, modelData) {
-
-        data["type"] = "scatter"
-        data["mode"] = "markers"
-
-        var layout = {
-          xaxis: { range: [0, 160] },
-          yaxis: { range: [0, 90] }
-        };
-
-        Plotly.newPlot('pointData', [data, modelData], layout);
-      }
-
-
-
-
-
-setTimeout( function(){setInterval(predictionLoop, 1000 / 30);}, 5000)
-
-
-
-    </script>
+  </script>
 </body>
 
 </html>
