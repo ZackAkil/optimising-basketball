@@ -11,7 +11,7 @@
   <style>
     #container {
       margin: 0px auto;
-      border: 10px #333 solid;
+      /* border: 10px #333 solid; */
     }
 
     #videoElement {
@@ -47,9 +47,9 @@
 
     <canvas id="chart" width="400" height="100"></canvas>
 
-    <h3 id="fps"></h3>
+    <h3> FPS: <span id="fps"> </span></h3>
 
-    <button onclick="capture_train_display()">Click me</button>
+    <!-- <button onclick="capture_train_display()">Click me</button> -->
 
     <h2 id="angle"></h3>
 
@@ -189,7 +189,9 @@
       function de_bounce_predict(){
         if ((Date.now() - time_since_last_predict) > 5000){
           time_since_last_predict = Date.now();
-          capture_train_display();
+
+// disable training
+          // capture_train_display();
         }
 
                       
