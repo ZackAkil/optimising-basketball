@@ -62,8 +62,8 @@
   <!-- <button onclick="capture_train_display()">Click me</button> -->
 
 
-  <h2 id="angle"></h2>
-  <h2 id="power" style="display:none;"></h2>
+  <h4>Your shots angle is <span id="angle" style="font-size:1.2em"></span> degrees</h4>
+  <h4 id="power" style="display:none;"></h4>
 
   <div id="pointData">
     <!-- Plotly chart will be drawn inside this DIV -->
@@ -190,7 +190,7 @@
             console.log(angleModel.angle.dataSync());
 
             // angle
-            document.getElementById("angle").innerHTML = angleModel.angle.dataSync()
+            document.getElementById("angle").innerHTML = Math.round(angleModel.angle.dataSync())
             document.getElementById("power").innerHTML = angleModel.power.dataSync()
 
 
