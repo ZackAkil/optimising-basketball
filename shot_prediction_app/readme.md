@@ -1,9 +1,9 @@
 
-[Prototype App](https://zackakil.github.io/optimising-basketball/shot_prediction_app/app_prototype/)
-
 [Just Shot App](https://zackakil.github.io/optimising-basketball/shot_prediction_app/app_just_shot/)
 
-[Full App](https://zackakil.github.io/optimising-basketball/shot_prediction_app/app_full/)
+[Shot with Position App](https://zackakil.github.io/optimising-basketball/shot_prediction_app/app_prototype/)
+
+[Shot with Position with Angle App](https://zackakil.github.io/optimising-basketball/shot_prediction_app/app_full/)
 
 
 
